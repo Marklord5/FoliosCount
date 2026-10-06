@@ -63,7 +63,7 @@
       place-items: center;
     }
     input:placeholder-shown + .borrar { opacity: 0; visibility: hidden; }
-    #borrarTodo {
+    .bloque {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -73,7 +73,48 @@
       margin-top: 12px;
       border-color: #374151;
     }
-    #borrarTodo:hover:not(:disabled) { border-color: #7f1d1d; }
+    .peligro:hover:not(:disabled) { border-color: #7f1d1d; }
+    .accion:hover:not(:disabled) { color: #93c5fd; background: #172033; border-color: #1e3a8a; }
+
+    .modos {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      padding: 4px;
+      background: #0f1115;
+      border-radius: 10px;
+    }
+    .modos button { flex: 1; min-height: 36px; }
+    .modos [aria-pressed="true"] { color: #60a5fa; background: #172033; }
+
+    #lista { counter-reset: seccion; }
+    .seccion { counter-increment: seccion; margin-bottom: 14px; }
+    .cabecera {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: .9rem;
+    }
+    .cabecera span::before { content: 'Sección ' counter(seccion); }
+    output { margin-left: auto; color: #60a5fa; font-weight: 600; }
+    .seccion.error output { color: #fca5a5; font-weight: 400; }
+    .quitar { width: 36px; height: 36px; display: grid; place-items: center; }
+    .seccion:only-child .quitar { visibility: hidden; }
+    .par { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .par input { padding-right: 12px; }
+
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      font-size: .9rem;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td { padding: 8px 6px; text-align: right; border-bottom: 1px solid #262b34; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: #9ca3af; font-weight: 500; }
+    tfoot td { border: 0; font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
     @media (prefers-reduced-motion: reduce) {
       button { transition: none; }
     }
@@ -93,6 +134,12 @@
   <main>
     <h1>Calculadora de folios</h1>
 
+    <nav class="modos">
+      <button type="button" class="accion" data-modo="simple" aria-pressed="true">Simple</button>
+      <button type="button" class="accion" data-modo="secciones" aria-pressed="false">Por secciones</button>
+    </nav>
+
+    <section class="modo" id="simple">
     <label for="inicial">Folio inicial</label>
     <div class="campo">
       <input type="text" id="inicial" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 1001" autofocus>
@@ -111,10 +158,56 @@
 
     <p id="resultado" aria-live="polite">Escribe ambos folios</p>
 
-    <button type="button" id="borrarTodo" disabled>
+    <button type="button" class="bloque peligro" id="borrarTodo" disabled>
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
       Borrar todo
     </button>
+    </section>
+
+    <section class="modo" id="secciones" hidden>
+      <div id="lista"></div>
+
+      <button type="button" class="bloque accion" id="agregar">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar sección
+      </button>
+
+      <table id="resumen">
+        <thead>
+          <tr><th>Sección</th><th>Inicial</th><th>Final</th><th>Folios</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr><td>Total</td><td></td><td></td><td id="total">0</td></tr>
+        </tfoot>
+      </table>
+
+      <button type="button" class="bloque accion" id="copiar" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+        <span>Copiar para Excel</span>
+      </button>
+
+      <button type="button" class="bloque peligro" id="reiniciar">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+        Borrar todo
+      </button>
+    </section>
+
+    <template id="plantillaSeccion">
+      <div class="seccion">
+        <div class="cabecera">
+          <span></span>
+          <output></output>
+          <button type="button" class="quitar" aria-label="Quitar sección" title="Quitar sección">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="par">
+          <input type="text" autocapitalize="characters" placeholder="Inicial" aria-label="Folio inicial">
+          <input type="text" autocapitalize="characters" placeholder="Final" aria-label="Folio final">
+        </div>
+      </div>
+    </template>
   </main>
 
   <script>
@@ -168,6 +261,100 @@
     document.getElementById('borrarFinal').addEventListener('click', () => borrar(final));
     borrarTodo.addEventListener('click', () => borrar(inicial, final));
     calcular();
+
+    const modos = document.querySelectorAll('.modos button');
+    const lista = document.getElementById('lista');
+    const resumen = document.getElementById('resumen');
+    const copiar = document.getElementById('copiar');
+
+    function cambiarModo(event) {
+      const modo = event.currentTarget.dataset.modo;
+      modos.forEach(boton => boton.setAttribute('aria-pressed', boton === event.currentTarget));
+      document.querySelectorAll('.modo').forEach(seccion => seccion.hidden = seccion.id !== modo);
+      document.querySelector(`#${modo} input`).focus();
+    }
+
+    function agregarSeccion() {
+      lista.append(document.getElementById('plantillaSeccion').content.cloneNode(true));
+      lista.lastElementChild.querySelector('input').focus();
+      resumir();
+    }
+
+    function reiniciarSecciones() {
+      lista.replaceChildren();
+      agregarSeccion();
+    }
+
+    function resumir() {
+      let total = 0;
+      let filas = '';
+
+      [...lista.children].forEach((seccion, i) => {
+        const [inicio, fin] = [...seccion.querySelectorAll('input')].map(input => input.value);
+        const [a, b] = [inicio, fin].map(folio => folio.replace(/\D/g, ''));
+        const salida = seccion.querySelector('output');
+        const [letrasInicio, letrasFin] = [inicio, fin].map(folio => folio.replace(/[^A-Z]/g, ''));
+        const completa = a !== '' && b !== '';
+        let error = '';
+        if (completa && Number(b) < Number(a)) error = 'Final menor al inicial';
+        if (completa && letrasInicio !== letrasFin) error = 'Las letras no coinciden';
+
+        seccion.classList.toggle('error', error !== '');
+        salida.textContent = error;
+        if (!completa || error) return;
+
+        const folios = Number(b) - Number(a) + 1;
+        total += folios;
+        salida.textContent = `${folios.toLocaleString('es-MX')} folios`;
+        filas += `<tr><td>${i + 1}</td><td>${inicio}</td><td>${fin}</td><td>${folios}</td></tr>`;
+      });
+
+      resumen.tBodies[0].innerHTML = filas;
+      document.getElementById('total').textContent = total;
+      copiar.disabled = filas === '';
+    }
+
+    function editarSeccion(event) {
+      event.target.value = event.target.value.replace(/[^a-z0-9-]/gi, '').toUpperCase();
+      resumir();
+    }
+
+    function navegarConTeclado(event) {
+      if (!event.target.matches('input')) return;
+
+      if (event.key === 'Escape') {
+        event.target.value = '';
+        resumir();
+      }
+      if (event.key === 'Enter') {
+        const inputs = [...lista.querySelectorAll('input')];
+        const siguiente = inputs[inputs.indexOf(event.target) + 1];
+        siguiente ? siguiente.focus() : agregarSeccion();
+      }
+    }
+
+    function quitarSeccion(event) {
+      const quitar = event.target.closest('.quitar');
+      if (!quitar) return;
+      quitar.closest('.seccion').remove();
+      resumir();
+    }
+
+    async function copiarResumen() {
+      const tabla = [...resumen.rows].map(fila => [...fila.cells].map(celda => celda.textContent).join('\t')).join('\n');
+      await navigator.clipboard.writeText(tabla);
+      copiar.querySelector('span').textContent = 'Copiado';
+      setTimeout(() => copiar.querySelector('span').textContent = 'Copiar para Excel', 1500);
+    }
+
+    modos.forEach(boton => boton.addEventListener('click', cambiarModo));
+    lista.addEventListener('input', editarSeccion);
+    lista.addEventListener('keydown', navegarConTeclado);
+    lista.addEventListener('click', quitarSeccion);
+    document.getElementById('agregar').addEventListener('click', agregarSeccion);
+    document.getElementById('reiniciar').addEventListener('click', reiniciarSecciones);
+    copiar.addEventListener('click', copiarResumen);
+    agregarSeccion();
   </script>
 </body>
 </html>
