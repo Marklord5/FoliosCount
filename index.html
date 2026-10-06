@@ -49,9 +49,9 @@
       border-radius: 7px;
       cursor: pointer;
       touch-action: manipulation;
-      transition: color .15s, background .15s, border-color .15s, opacity .15s, visibility .15s, transform .15s;
+      transition: color .15s, background .15s, filter .15s, opacity .15s, visibility .15s, transform .15s;
     }
-    button:hover:not(:disabled) { color: #fca5a5; background: #2a1517; }
+    button:hover:not(:disabled) { filter: brightness(1.25); }
     button:active:not(:disabled) { transform: scale(.94); }
     button:focus-visible { outline: 2px solid #60a5fa; }
     button:disabled { opacity: .4; cursor: not-allowed; }
@@ -71,10 +71,11 @@
       width: 100%;
       min-height: 44px;
       margin-top: 12px;
-      border-color: #374151;
     }
-    .peligro:hover:not(:disabled) { border-color: #7f1d1d; }
-    .accion:hover:not(:disabled) { color: #93c5fd; background: #172033; border-color: #1e3a8a; }
+    .peligro, .borrar, .quitar { color: #fca5a5; }
+    .accion { color: #93c5fd; }
+    .bloque.peligro { background: #2a1517; border-color: #7f1d1d; }
+    .bloque.accion { background: #172033; border-color: #1e3a8a; }
 
     .modos {
       display: flex;
@@ -135,8 +136,8 @@
     <h1>Calculadora de folios</h1>
 
     <nav class="modos">
-      <button type="button" class="accion" data-modo="simple" aria-pressed="true">Simple</button>
-      <button type="button" class="accion" data-modo="secciones" aria-pressed="false">Por secciones</button>
+      <button type="button" data-modo="simple" aria-pressed="true">Simple</button>
+      <button type="button" data-modo="secciones" aria-pressed="false">Por secciones</button>
     </nav>
 
     <section class="modo" id="simple">
