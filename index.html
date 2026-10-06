@@ -26,13 +26,13 @@
       box-sizing: border-box;
     }
     h1 { font-size: 1.25rem; margin: 0 0 20px; }
-    label { display: block; font-size: .9rem; margin-bottom: 16px; }
+    label { display: block; font-size: .9rem; margin-bottom: 6px; }
+    .campo { position: relative; margin-bottom: 16px; }
     input {
       display: block;
       width: 100%;
       box-sizing: border-box;
-      margin-top: 6px;
-      padding: 10px 12px;
+      padding: 10px 46px 10px 12px;
       font-size: 1.1rem;
       color: inherit;
       background: #0f1115;
@@ -40,6 +40,43 @@
       border-radius: 8px;
     }
     input:focus { outline: 2px solid #60a5fa; border-color: transparent; }
+    input::placeholder { color: #6b7280; }
+    button {
+      font: inherit;
+      color: #9ca3af;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: color .15s, background .15s, border-color .15s, opacity .15s, visibility .15s, transform .15s;
+    }
+    button:hover:not(:disabled) { color: #fca5a5; background: #2a1517; }
+    button:active:not(:disabled) { transform: scale(.94); }
+    button:focus-visible { outline: 2px solid #60a5fa; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    .borrar {
+      position: absolute;
+      inset: 1px 1px 1px auto;
+      width: 44px;
+      display: grid;
+      place-items: center;
+    }
+    input:placeholder-shown + .borrar { opacity: 0; visibility: hidden; }
+    #borrarTodo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 44px;
+      margin-top: 12px;
+      border-color: #374151;
+    }
+    #borrarTodo:hover:not(:disabled) { border-color: #7f1d1d; }
+    @media (prefers-reduced-motion: reduce) {
+      button { transition: none; }
+    }
     #resultado {
       margin: 8px 0 0;
       padding: 16px;
@@ -56,31 +93,54 @@
   <main>
     <h1>Calculadora de folios</h1>
 
-    <label>
-      Folio inicial
-      <input type="text" id="inicial" inputmode="numeric" pattern="[0-9]*" autofocus>
-    </label>
+    <label for="inicial">Folio inicial</label>
+    <div class="campo">
+      <input type="text" id="inicial" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 1001" autofocus>
+      <button type="button" class="borrar" id="borrarInicial" aria-label="Borrar folio inicial" title="Borrar (Esc)" tabindex="-1">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
 
-    <label>
-      Folio final
-      <input type="text" id="final" inputmode="numeric" pattern="[0-9]*">
-    </label>
+    <label for="final">Folio final</label>
+    <div class="campo">
+      <input type="text" id="final" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 1050">
+      <button type="button" class="borrar" id="borrarFinal" aria-label="Borrar folio final" title="Borrar (Esc)" tabindex="-1">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
 
-    <p id="resultado">Escribe ambos folios</p>
+    <p id="resultado" aria-live="polite">Escribe ambos folios</p>
+
+    <button type="button" id="borrarTodo" disabled>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+      Borrar todo
+    </button>
   </main>
 
   <script>
     const inicial = document.getElementById('inicial');
     const final = document.getElementById('final');
     const resultado = document.getElementById('resultado');
+    const borrarTodo = document.getElementById('borrarTodo');
 
     function aceptarSoloNumeros(event) {
       event.target.value = event.target.value.replace(/\D/g, '');
       calcular();
     }
 
+    function borrar(...inputs) {
+      inputs.forEach(input => input.value = '');
+      inputs[0].focus();
+      calcular();
+    }
+
+    function borrarConEscape(event) {
+      if (event.key === 'Escape') borrar(event.target);
+    }
+
     function calcular() {
       resultado.className = '';
+      borrarTodo.disabled = inicial.value === '' && final.value === '';
 
       if (inicial.value === '' || final.value === '') {
         resultado.textContent = 'Escribe ambos folios';
@@ -102,6 +162,12 @@
 
     inicial.addEventListener('input', aceptarSoloNumeros);
     final.addEventListener('input', aceptarSoloNumeros);
+    inicial.addEventListener('keydown', borrarConEscape);
+    final.addEventListener('keydown', borrarConEscape);
+    document.getElementById('borrarInicial').addEventListener('click', () => borrar(inicial));
+    document.getElementById('borrarFinal').addEventListener('click', () => borrar(final));
+    borrarTodo.addEventListener('click', () => borrar(inicial, final));
+    calcular();
   </script>
 </body>
 </html>
