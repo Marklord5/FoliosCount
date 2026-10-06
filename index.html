@@ -58,12 +58,12 @@
 
     <label>
       Folio inicial
-      <input type="number" id="inicial" min="0" step="1" autofocus>
+      <input type="text" id="inicial" inputmode="numeric" pattern="[0-9]*" autofocus>
     </label>
 
     <label>
       Folio final
-      <input type="number" id="final" min="0" step="1">
+      <input type="text" id="final" inputmode="numeric" pattern="[0-9]*">
     </label>
 
     <p id="resultado">Escribe ambos folios</p>
@@ -73,6 +73,11 @@
     const inicial = document.getElementById('inicial');
     const final = document.getElementById('final');
     const resultado = document.getElementById('resultado');
+
+    function aceptarSoloNumeros(event) {
+      event.target.value = event.target.value.replace(/\D/g, '');
+      calcular();
+    }
 
     function calcular() {
       resultado.className = '';
@@ -95,8 +100,8 @@
       resultado.innerHTML = `<strong>${total.toLocaleString('es-MX')}</strong> folios en total`;
     }
 
-    inicial.addEventListener('input', calcular);
-    final.addEventListener('input', calcular);
+    inicial.addEventListener('input', aceptarSoloNumeros);
+    final.addEventListener('input', aceptarSoloNumeros);
   </script>
 </body>
 </html>
