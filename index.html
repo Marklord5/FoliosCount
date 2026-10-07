@@ -28,7 +28,7 @@
     h1 { font-size: 1.25rem; margin: 0 0 20px; }
     label { display: block; font-size: .9rem; margin-bottom: 6px; }
     .campo { position: relative; margin-bottom: 16px; }
-    input {
+    input, textarea {
       display: block;
       width: 100%;
       box-sizing: border-box;
@@ -39,8 +39,9 @@
       border: 1px solid #374151;
       border-radius: 8px;
     }
-    input:focus { outline: 2px solid #60a5fa; border-color: transparent; }
-    input::placeholder { color: #6b7280; }
+    :is(input, textarea):focus { outline: 2px solid #60a5fa; border-color: transparent; }
+    ::placeholder { color: #6b7280; }
+    textarea { padding-right: 12px; font: inherit; font-size: .9rem; white-space: pre; resize: vertical; }
     button {
       font: inherit;
       color: #9ca3af;
@@ -85,7 +86,7 @@
       background: #0f1115;
       border-radius: 10px;
     }
-    .modos button { flex: 1; min-height: 36px; }
+    .modos button { flex: auto; min-height: 36px; white-space: nowrap; }
     .modos [aria-pressed="true"] { color: #60a5fa; background: #172033; }
 
     #lista { counter-reset: seccion; }
@@ -129,6 +130,7 @@
     }
     #resultado strong { display: block; font-size: 2rem; color: #60a5fa; }
     #resultado.error { background: #2a1517; color: #fca5a5; }
+    #aviso { margin: 0; font-size: .9rem; color: #fca5a5; white-space: pre-line; }
   </style>
 </head>
 <body>
@@ -138,6 +140,7 @@
     <nav class="modos">
       <button type="button" data-modo="simple" aria-pressed="true">Simple</button>
       <button type="button" data-modo="secciones" aria-pressed="false">Por secciones</button>
+      <button type="button" data-modo="acuse" aria-pressed="false">Acuse</button>
     </nav>
 
     <section class="modo" id="simple">
@@ -194,6 +197,44 @@
       </button>
     </section>
 
+    <section class="modo" id="acuse" hidden>
+      <div class="modos" id="tipo">
+        <button type="button" aria-pressed="true">Montaje</button>
+        <button type="button" aria-pressed="false">Desmontaje</button>
+      </div>
+
+      <label for="pegado">Categorías y folios (una por línea)</label>
+      <div class="campo">
+        <textarea id="pegado" rows="8" placeholder="Kohlmann 13846 14405&#10;CaterInc 14406 14430"></textarea>
+      </div>
+
+      <label for="solicitante">Solicitante</label>
+      <div class="campo"><input type="text" id="solicitante" value="Andrea Barragán"></div>
+
+      <label for="area">Área</label>
+      <div class="campo"><input type="text" id="area" value="Equipo Experiencia Culinaria"></div>
+
+      <label for="observaciones">Observaciones</label>
+      <div class="campo"><input type="text" id="observaciones"></div>
+
+      <p id="aviso" aria-live="polite"></p>
+
+      <table id="vista">
+        <thead>
+          <tr><th>Categoría</th><th>Inicial</th><th>Final</th><th>Total</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr><td>Total</td><td></td><td></td><td id="totalAcuse">0</td></tr>
+        </tfoot>
+      </table>
+
+      <button type="button" class="bloque accion" id="descargar" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+        Descargar Excel
+      </button>
+    </section>
+
     <template id="plantillaSeccion">
       <div class="seccion">
         <div class="cabecera">
@@ -211,6 +252,8 @@
     </template>
   </main>
 
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <script src="logo.js"></script>
   <script>
     const inicial = document.getElementById('inicial');
     const final = document.getElementById('final');
@@ -263,7 +306,7 @@
     borrarTodo.addEventListener('click', () => borrar(inicial, final));
     calcular();
 
-    const modos = document.querySelectorAll('.modos button');
+    const modos = document.querySelectorAll('nav button');
     const lista = document.getElementById('lista');
     const resumen = document.getElementById('resumen');
     const copiar = document.getElementById('copiar');
@@ -272,7 +315,7 @@
       const modo = event.currentTarget.dataset.modo;
       modos.forEach(boton => boton.setAttribute('aria-pressed', boton === event.currentTarget));
       document.querySelectorAll('.modo').forEach(seccion => seccion.hidden = seccion.id !== modo);
-      document.querySelector(`#${modo} input`).focus();
+      document.querySelector(`#${modo} :is(input, textarea)`).focus();
     }
 
     function agregarSeccion() {
@@ -356,6 +399,120 @@
     document.getElementById('reiniciar').addEventListener('click', reiniciarSecciones);
     copiar.addEventListener('click', copiarResumen);
     agregarSeccion();
+
+    const tipo = document.getElementById('tipo');
+    const pegado = document.getElementById('pegado');
+    const solicitante = document.getElementById('solicitante');
+    const area = document.getElementById('area');
+    const descargar = document.getElementById('descargar');
+    const FILA_PEGADA = /^(?:(?:des)?montaje\s*-\s*)?(.+?)[\s:,;|-]+(\d+)\D+(\d+)$/i;
+    const pegadoPorTipo = { MONTAJE: '', DESMONTAJE: '' };
+    let filasAcuse = [];
+
+    function tipoElegido() {
+      return tipo.querySelector('[aria-pressed="true"]').textContent.toUpperCase();
+    }
+
+    function elegirTipo(event) {
+      tipo.querySelectorAll('button').forEach(boton => boton.setAttribute('aria-pressed', boton === event.currentTarget));
+      pegado.value = pegadoPorTipo[tipoElegido()];
+      pegado.focus();
+      leerPegado();
+    }
+
+    function leerPegado() {
+      const ilegibles = [];
+      filasAcuse = [];
+      pegadoPorTipo[tipoElegido()] = pegado.value;
+
+      for (const [seccion, texto] of Object.entries(pegadoPorTipo)) {
+        for (const linea of texto.split('\n').map(linea => linea.trim()).filter(Boolean)) {
+          const columnas = linea.split('\t');
+          const sinColumnasExtra = columnas.length > 3 ? `${columnas[0]}\t${columnas.at(-2)}\t${columnas.at(-1)}` : linea;
+          const [, nombre, a, b] = sinColumnasExtra.match(FILA_PEGADA) ?? [];
+          if (Number(b) >= Number(a)) filasAcuse.push({ categoria: `${seccion} - ${nombre}`, inicial: Number(a), final: Number(b), total: b - a + 1 });
+          else ilegibles.push(`${seccion}: ${linea}`);
+        }
+      }
+
+      const problema = ilegibles.length ? `No pude leer:\n${ilegibles.join('\n')}` : '';
+
+      document.getElementById('vista').tBodies[0].replaceChildren(...filasAcuse.map(fila => {
+        const renglon = document.createElement('tr');
+        Object.values(fila).forEach(valor => renglon.insertCell().textContent = valor);
+        return renglon;
+      }));
+      document.getElementById('totalAcuse').textContent = filasAcuse.reduce((suma, fila) => suma + fila.total, 0);
+      document.getElementById('aviso').textContent = problema;
+      descargar.disabled = filasAcuse.length === 0 || problema !== '';
+    }
+
+    async function descargarAcuse() {
+      const libro = new ExcelJS.Workbook();
+      const hoja = libro.addWorksheet('ACUSE', { pageSetup: { fitToPage: true, fitToHeight: 0 } });
+      const negrita = { bold: true };
+      const centrado = { horizontal: 'center', vertical: 'middle' };
+      const fino = { style: 'thin' };
+      const grueso = { style: 'medium' };
+      const escribir = (celda, valor, estilo) => Object.assign(hoja.getCell(celda), { value: valor, ...estilo });
+
+      hoja.columns = [{ width: 54 }, { width: 19 }, { width: 15.5 }, { width: 12 }];
+      [22, 34, 24].forEach((alto, i) => hoja.getRow(5 + i).height = alto);
+      hoja.addImage(libro.addImage({ base64: LOGO, extension: 'jpeg' }), { tl: { col: 0, row: 3 }, ext: { width: 270, height: 127 } });
+
+      hoja.mergeCells('B5:D5');
+      hoja.mergeCells('B6:D6');
+      escribir('B5', 'ACUSE DE RECIBIDO', { font: { bold: true, size: 16 }, alignment: centrado });
+      escribir('B6', 'F1- 2026', { font: { bold: true, size: 16 }, alignment: centrado });
+
+      escribir('A8', 'SOLICITANTE:', { font: negrita });
+      escribir('B8', solicitante.value, { font: negrita });
+      escribir('A9', 'ÁREA:', { font: negrita });
+      escribir('B9', area.value, { font: negrita });
+      escribir('A10', 'OBSERVACIONES:', { font: negrita });
+      escribir('B10', document.getElementById('observaciones').value, { font: negrita });
+
+      ['CATEGORIA', 'FOLIO INICIAL', 'FOLIO FINAL', 'TOTAL'].forEach((titulo, i) => escribir(`${'ABCD'[i]}12`, titulo, {
+        font: negrita,
+        alignment: centrado,
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF9BC2E6' } },
+        border: { top: grueso, bottom: grueso, left: grueso, right: grueso },
+      }));
+
+      filasAcuse.forEach(({ categoria, inicial, final, total }, i) => {
+        const n = 13 + i;
+        const renglon = hoja.getRow(n);
+        renglon.height = 26;
+        renglon.values = [categoria, inicial, final, { formula: `C${n}-B${n}+1`, result: total }];
+        renglon.eachCell((celda, columna) => {
+          celda.alignment = { horizontal: 'left', vertical: 'middle' };
+          celda.border = {
+            top: fino,
+            bottom: i === filasAcuse.length - 1 ? grueso : fino,
+            left: columna === 1 ? grueso : fino,
+            right: columna === 4 ? grueso : fino,
+          };
+        });
+      });
+
+      const firma = 13 + filasAcuse.length + 4;
+      escribir(`A${firma}`, `RECIBE:${'_'.repeat(33)}   FIRMA:${'_'.repeat(27)}`);
+      escribir(`A${firma + 2}`, `FECHA:${'_'.repeat(34)}`);
+
+      const enlace = document.createElement('a');
+      enlace.href = URL.createObjectURL(new Blob([await libro.xlsx.writeBuffer()]));
+      enlace.download = `ACUSE F1-26 ${solicitante.value}.xlsx`;
+      enlace.click();
+    }
+
+    for (const campo of [solicitante, area]) {
+      campo.value = localStorage[campo.id] ?? campo.value;
+      campo.addEventListener('input', () => localStorage[campo.id] = campo.value);
+    }
+    tipo.querySelectorAll('button').forEach(boton => boton.addEventListener('click', elegirTipo));
+    pegado.addEventListener('input', leerPegado);
+    descargar.addEventListener('click', descargarAcuse);
+    leerPegado();
   </script>
 </body>
 </html>
