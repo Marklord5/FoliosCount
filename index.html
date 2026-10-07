@@ -209,10 +209,10 @@
       </div>
 
       <label for="solicitante">Solicitante</label>
-      <div class="campo"><input type="text" id="solicitante" value="Andrea Barragán"></div>
+      <div class="campo"><input type="text" id="solicitante" placeholder="Ej. Andrea Barragán"></div>
 
       <label for="area">Área</label>
-      <div class="campo"><input type="text" id="area" value="Equipo Experiencia Culinaria"></div>
+      <div class="campo"><input type="text" id="area" placeholder="Ej. Equipo Experiencia Culinaria"></div>
 
       <label for="observaciones">Observaciones</label>
       <div class="campo"><input type="text" id="observaciones"></div>
@@ -232,6 +232,11 @@
       <button type="button" class="bloque accion" id="descargar" disabled>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
         Descargar Excel
+      </button>
+
+      <button type="button" class="bloque peligro" id="limpiarAcuse">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+        Borrar todo
       </button>
     </section>
 
@@ -501,17 +506,21 @@
 
       const enlace = document.createElement('a');
       enlace.href = URL.createObjectURL(new Blob([await libro.xlsx.writeBuffer()]));
-      enlace.download = `ACUSE F1-26 ${solicitante.value}.xlsx`;
+      enlace.download = `${`ACUSE F1-26 ${solicitante.value}`.trim()}.xlsx`;
       enlace.click();
     }
 
-    for (const campo of [solicitante, area]) {
-      campo.value = localStorage[campo.id] ?? campo.value;
-      campo.addEventListener('input', () => localStorage[campo.id] = campo.value);
+    function limpiarAcuse() {
+      Object.keys(pegadoPorTipo).forEach(seccion => pegadoPorTipo[seccion] = '');
+      document.querySelectorAll('#acuse :is(input, textarea)').forEach(campo => campo.value = '');
+      pegado.focus();
+      leerPegado();
     }
+
     tipo.querySelectorAll('button').forEach(boton => boton.addEventListener('click', elegirTipo));
     pegado.addEventListener('input', leerPegado);
     descargar.addEventListener('click', descargarAcuse);
+    document.getElementById('limpiarAcuse').addEventListener('click', limpiarAcuse);
     leerPegado();
   </script>
 </body>
