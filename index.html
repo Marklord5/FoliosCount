@@ -162,6 +162,11 @@
 
     <p id="resultado" aria-live="polite">Escribe ambos folios</p>
 
+    <button type="button" class="bloque accion" id="copiarFolios" disabled>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+      <span>Copiar folios</span>
+    </button>
+
     <button type="button" class="bloque peligro" id="borrarTodo" disabled>
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
       Borrar todo
@@ -264,6 +269,7 @@
     const final = document.getElementById('final');
     const resultado = document.getElementById('resultado');
     const borrarTodo = document.getElementById('borrarTodo');
+    const copiarFolios = document.getElementById('copiarFolios');
 
     function aceptarSoloNumeros(event) {
       event.target.value = event.target.value.replace(/\D/g, '');
@@ -283,6 +289,7 @@
     function calcular() {
       resultado.className = '';
       borrarTodo.disabled = inicial.value === '' && final.value === '';
+      copiarFolios.disabled = true;
 
       if (inicial.value === '' || final.value === '') {
         resultado.textContent = 'Escribe ambos folios';
@@ -300,6 +307,13 @@
 
       const total = b - a + 1;
       resultado.innerHTML = `<strong>${total.toLocaleString('es-MX')}</strong> folios en total`;
+      copiarFolios.disabled = false;
+    }
+
+    async function copiarRango() {
+      await navigator.clipboard.writeText(`${inicial.value} ${final.value}`);
+      copiarFolios.querySelector('span').textContent = 'Copiado';
+      setTimeout(() => copiarFolios.querySelector('span').textContent = 'Copiar folios', 1500);
     }
 
     inicial.addEventListener('input', aceptarSoloNumeros);
@@ -309,6 +323,7 @@
     document.getElementById('borrarInicial').addEventListener('click', () => borrar(inicial));
     document.getElementById('borrarFinal').addEventListener('click', () => borrar(final));
     borrarTodo.addEventListener('click', () => borrar(inicial, final));
+    copiarFolios.addEventListener('click', copiarRango);
     calcular();
 
     const modos = document.querySelectorAll('nav button');
