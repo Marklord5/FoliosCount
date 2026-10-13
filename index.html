@@ -570,7 +570,8 @@
     const foliosQr = document.getElementById('foliosQr');
     const botonQr = document.getElementById('descargarQr');
     const avisoQr = document.getElementById('avisoQr');
-    const QR_POR_FILA = 5;
+    const QR_POR_FILA = 9;
+    const QR_PIXELES = 2 / 2.54 * 96;
 
     function leerFolios() {
       let folios;
@@ -593,12 +594,12 @@
 
       const color = document.getElementById('colorQr').value;
       const modulos = codigo.getModuleCount();
-      const lado = Math.floor(344 / modulos);
-      const orilla = Math.round((480 - lado * modulos) / 2);
-      const lienzo = Object.assign(document.createElement('canvas'), { width: 480, height: 628 });
+      const lado = Math.floor(312 / modulos);
+      const orilla = Math.round((352 - lado * modulos) / 2);
+      const lienzo = Object.assign(document.createElement('canvas'), { width: 480, height: 480 });
       const pincel = lienzo.getContext('2d');
 
-      pincel.roundRect(8, 8, 464, 612, 40);
+      pincel.roundRect(3, 3, 474, 474, 40);
       pincel.fillStyle = '#FFFFFF';
       pincel.fill();
       pincel.fillStyle = `${color}22`;
@@ -608,43 +609,40 @@
       pincel.stroke();
 
       pincel.beginPath();
-      pincel.roundRect(36, 36, 408, 408, 24);
+      pincel.roundRect(64, 22, 352, 352, 24);
       pincel.fillStyle = '#FFFFFF';
       pincel.fill();
 
       pincel.fillStyle = color;
       for (let fila = 0; fila < modulos; fila++) {
         for (let columna = 0; columna < modulos; columna++) {
-          if (codigo.isDark(fila, columna)) pincel.fillRect(orilla + columna * lado, orilla + fila * lado, lado, lado);
+          if (codigo.isDark(fila, columna)) pincel.fillRect(64 + orilla + columna * lado, 22 + orilla + fila * lado, lado, lado);
         }
       }
 
-      pincel.font = '800 72px system-ui, sans-serif';
+      pincel.font = '800 68px system-ui, sans-serif';
       pincel.textAlign = 'center';
       pincel.textBaseline = 'middle';
-      pincel.fillText(folio, 240, 534, 424);
+      pincel.fillText(folio, 240, 426, 436);
       return lienzo.toDataURL();
     }
 
     async function descargarQr() {
-      const folios = leerFolios();
       const libro = new ExcelJS.Workbook();
       const hoja = libro.addWorksheet('QR', { pageSetup: {
-        fitToPage: true,
-        fitToHeight: Math.ceil(folios.length / QR_POR_FILA ** 2),
         horizontalCentered: true,
         margins: { left: 0.25, right: 0.25, top: 0.25, bottom: 0.25, header: 0, footer: 0 },
       } });
-      hoja.columns = Array(QR_POR_FILA).fill({ width: 23 });
+      hoja.columns = Array(QR_POR_FILA).fill({ width: 11.6 });
       qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
 
       try {
-        folios.forEach((folio, i) => {
+        leerFolios().forEach((folio, i) => {
           const fila = Math.floor(i / QR_POR_FILA);
           const columna = i % QR_POR_FILA;
-          hoja.getRow(fila + 1).height = 158;
-          Object.assign(hoja.getCell(fila + 1, columna + 1), { value: folio, alignment: { horizontal: 'center', vertical: 'middle', wrapText: true } });
-          hoja.addImage(libro.addImage({ base64: dibujarTarjeta(folio), extension: 'png' }), { tl: { col: columna, row: fila }, br: { col: columna + 1, row: fila + 1 }, editAs: 'twoCell' });
+          hoja.getRow(fila + 1).height = 58;
+          Object.assign(hoja.getCell(fila + 1, columna + 1), { value: folio, font: { color: { argb: 'FFFFFFFF' } } });
+          hoja.addImage(libro.addImage({ base64: dibujarTarjeta(folio), extension: 'png' }), { tl: { col: columna, row: fila }, ext: { width: QR_PIXELES, height: QR_PIXELES } });
         });
       } catch {
         avisoQr.textContent = 'Hay un folio demasiado largo para un QR';
