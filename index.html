@@ -118,8 +118,48 @@
     th:first-child, td:first-child { text-align: left; }
     th { color: #9ca3af; font-weight: 500; }
     tfoot td { border: 0; font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
+
+    .formatos { display: grid; gap: 8px; margin: 0 0 16px; padding: 0; border: 0; }
+    .formatos legend { margin-bottom: 6px; padding: 0; font-size: .9rem; }
+    .formato {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      margin: 0;
+      padding: 12px;
+      font-size: .8rem;
+      line-height: 1.4;
+      color: #9ca3af;
+      background: #0f1115;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: color .15s, background .15s, border-color .15s;
+    }
+    .formato:hover { border-color: #6b7280; }
+    .formato:has(:checked) { color: #cbd5e1; background: #172033; border-color: #60a5fa; }
+    .formato:has(:focus-visible) { outline: 2px solid #60a5fa; outline-offset: 2px; }
+    .formato input { position: absolute; width: auto; opacity: 0; pointer-events: none; }
+    .formato svg { flex: none; }
+    .formato span { flex: 1; }
+    .formato strong { display: block; font-size: .95rem; color: #e5e7eb; }
+    .formato small {
+      margin-left: 6px;
+      padding: 2px 8px;
+      font-size: .75rem;
+      font-weight: 500;
+      color: #93c5fd;
+      background: #1e3a8a;
+      border-radius: 999px;
+      vertical-align: 1px;
+    }
+    .formato .elegido path { opacity: 0; transition: opacity .15s; }
+    .formato :checked ~ .elegido { color: #60a5fa; }
+    .formato :checked ~ .elegido path { opacity: 1; }
+
     @media (prefers-reduced-motion: reduce) {
-      button { transition: none; }
+      button, .formato, .formato .elegido path { transition: none; }
     }
     #resultado {
       margin: 8px 0 0;
@@ -258,14 +298,27 @@
 
       <p id="avisoQr" aria-live="polite"></p>
 
-      <button type="button" class="bloque accion" id="qrPdf" disabled>
+      <fieldset class="formatos" id="formatos">
+        <legend>Formato</legend>
+
+        <label class="formato">
+          <input type="radio" name="formato" value="PDF" checked>
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></svg>
+          <span><strong>PDF <small>Recomendado</small></strong>Para imprimir: 130 por hoja, igual en cualquier equipo.</span>
+          <svg class="elegido" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+        </label>
+
+        <label class="formato">
+          <input type="radio" name="formato" value="Excel">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>
+          <span><strong>Excel</strong>Para editar: una tarjeta por celda, 9 por fila.</span>
+          <svg class="elegido" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+        </label>
+      </fieldset>
+
+      <button type="button" class="bloque accion" id="descargarQr" disabled>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
         <span>Descargar PDF</span>
-      </button>
-
-      <button type="button" class="bloque accion" id="qrExcel" disabled>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
-        <span>Descargar Excel</span>
       </button>
 
       <button type="button" class="bloque peligro" id="limpiarQr">
@@ -574,8 +627,8 @@
     leerPegado();
 
     const foliosQr = document.getElementById('foliosQr');
-    const botonPdf = document.getElementById('qrPdf');
-    const botonExcel = document.getElementById('qrExcel');
+    const formatos = document.getElementById('formatos');
+    const botonQr = document.getElementById('descargarQr');
     const avisoQr = document.getElementById('avisoQr');
     const PDF_POR_FILA = 10;
     const PDF_POR_HOJA = 130;
@@ -592,10 +645,9 @@
     function contarFolios() {
       const cantidad = leerFolios().length;
       avisoQr.textContent = '';
-      for (const [boton, formato] of [[botonPdf, 'PDF'], [botonExcel, 'Excel']]) {
-        boton.disabled = cantidad === 0;
-        boton.querySelector('span').textContent = cantidad ? `Descargar ${formato} (${cantidad} QR)` : `Descargar ${formato}`;
-      }
+      const formato = formatos.querySelector(':checked').value;
+      botonQr.disabled = cantidad === 0;
+      botonQr.querySelector('span').textContent = cantidad ? `Descargar ${formato} (${cantidad} QR)` : `Descargar ${formato}`;
     }
 
     function crearCodigos() {
@@ -719,8 +771,8 @@
     }
 
     foliosQr.addEventListener('input', contarFolios);
-    botonPdf.addEventListener('click', descargarQrPdf);
-    botonExcel.addEventListener('click', descargarQrExcel);
+    formatos.addEventListener('change', contarFolios);
+    botonQr.addEventListener('click', () => formatos.querySelector(':checked').value === 'PDF' ? descargarQrPdf() : descargarQrExcel());
     document.getElementById('limpiarQr').addEventListener('click', limpiarQr);
   </script>
 </body>
