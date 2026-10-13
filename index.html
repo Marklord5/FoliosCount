@@ -41,6 +41,7 @@
     }
     :is(input, textarea):focus { outline: 2px solid #60a5fa; border-color: transparent; }
     ::placeholder { color: #6b7280; }
+    input[type="color"] { height: 44px; padding: 4px; cursor: pointer; }
     textarea { padding-right: 12px; font: inherit; font-size: .9rem; white-space: pre; resize: vertical; }
     button {
       font: inherit;
@@ -86,7 +87,7 @@
       background: #0f1115;
       border-radius: 10px;
     }
-    .modos button { flex: auto; min-height: 36px; white-space: nowrap; }
+    .modos button { flex: auto; min-height: 36px; padding-inline: 4px; white-space: nowrap; }
     .modos [aria-pressed="true"] { color: #60a5fa; background: #172033; }
 
     #lista { counter-reset: seccion; }
@@ -130,7 +131,7 @@
     }
     #resultado strong { display: block; font-size: 2rem; color: #60a5fa; }
     #resultado.error { background: #2a1517; color: #fca5a5; }
-    #aviso { margin: 0; font-size: .9rem; color: #fca5a5; white-space: pre-line; }
+    #aviso, #avisoQr { margin: 0; font-size: .9rem; color: #fca5a5; white-space: pre-line; }
   </style>
 </head>
 <body>
@@ -141,6 +142,7 @@
       <button type="button" data-modo="simple" aria-pressed="true">Simple</button>
       <button type="button" data-modo="secciones" aria-pressed="false">Por secciones</button>
       <button type="button" data-modo="acuse" aria-pressed="false">Acuse</button>
+      <button type="button" data-modo="qr" aria-pressed="false">QR</button>
     </nav>
 
     <section class="modo" id="simple">
@@ -245,6 +247,28 @@
       </button>
     </section>
 
+    <section class="modo" id="qr" hidden>
+      <label for="foliosQr">Folios (uno por línea)</label>
+      <div class="campo">
+        <textarea id="foliosQr" rows="8" placeholder="FOLIO-1001&#10;FOLIO-1002"></textarea>
+      </div>
+
+      <label for="colorQr">Color del QR</label>
+      <div class="campo"><input type="color" id="colorQr" value="#000000"></div>
+
+      <p id="avisoQr" aria-live="polite"></p>
+
+      <button type="button" class="bloque accion" id="descargarQr" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+        <span>Descargar Excel</span>
+      </button>
+
+      <button type="button" class="bloque peligro" id="limpiarQr">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+        Borrar todo
+      </button>
+    </section>
+
     <template id="plantillaSeccion">
       <div class="seccion">
         <div class="cabecera">
@@ -263,6 +287,7 @@
   </main>
 
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script src="logo.js"></script>
   <script>
     const inicial = document.getElementById('inicial');
@@ -467,6 +492,13 @@
       descargar.disabled = filasAcuse.length === 0 || problema !== '';
     }
 
+    async function descargarLibro(libro, nombre) {
+      const enlace = document.createElement('a');
+      enlace.href = URL.createObjectURL(new Blob([await libro.xlsx.writeBuffer()]));
+      enlace.download = `${nombre}.xlsx`;
+      enlace.click();
+    }
+
     async function descargarAcuse() {
       const libro = new ExcelJS.Workbook();
       const hoja = libro.addWorksheet('ACUSE', { pageSetup: { fitToPage: true, fitToHeight: 0 } });
@@ -519,10 +551,7 @@
       escribir(`A${firma}`, `RECIBE:${'_'.repeat(33)}   FIRMA:${'_'.repeat(27)}`);
       escribir(`A${firma + 2}`, `FECHA:${'_'.repeat(34)}`);
 
-      const enlace = document.createElement('a');
-      enlace.href = URL.createObjectURL(new Blob([await libro.xlsx.writeBuffer()]));
-      enlace.download = `${`ACUSE F1-26 ${solicitante.value}`.trim()}.xlsx`;
-      enlace.click();
+      await descargarLibro(libro, `ACUSE F1-26 ${solicitante.value}`.trim());
     }
 
     function limpiarAcuse() {
@@ -537,6 +566,103 @@
     descargar.addEventListener('click', descargarAcuse);
     document.getElementById('limpiarAcuse').addEventListener('click', limpiarAcuse);
     leerPegado();
+
+    const foliosQr = document.getElementById('foliosQr');
+    const botonQr = document.getElementById('descargarQr');
+    const avisoQr = document.getElementById('avisoQr');
+    const QR_POR_FILA = 5;
+
+    function leerFolios() {
+      let folios;
+      try { folios = JSON.parse(foliosQr.value); } catch {}
+      if (!Array.isArray(folios)) folios = foliosQr.value.split('\n');
+      return folios.map(folio => String(folio).trim()).filter(Boolean);
+    }
+
+    function contarFolios() {
+      const cantidad = leerFolios().length;
+      avisoQr.textContent = '';
+      botonQr.disabled = cantidad === 0;
+      botonQr.querySelector('span').textContent = cantidad ? `Descargar Excel (${cantidad} QR)` : 'Descargar Excel';
+    }
+
+    function dibujarTarjeta(folio) {
+      const codigo = qrcode(0, 'M');
+      codigo.addData(folio);
+      codigo.make();
+
+      const color = document.getElementById('colorQr').value;
+      const modulos = codigo.getModuleCount();
+      const lado = Math.floor(344 / modulos);
+      const orilla = Math.round((480 - lado * modulos) / 2);
+      const lienzo = Object.assign(document.createElement('canvas'), { width: 480, height: 628 });
+      const pincel = lienzo.getContext('2d');
+
+      pincel.roundRect(8, 8, 464, 612, 40);
+      pincel.fillStyle = '#FFFFFF';
+      pincel.fill();
+      pincel.fillStyle = `${color}22`;
+      pincel.fill();
+      pincel.strokeStyle = color;
+      pincel.lineWidth = 6;
+      pincel.stroke();
+
+      pincel.beginPath();
+      pincel.roundRect(36, 36, 408, 408, 24);
+      pincel.fillStyle = '#FFFFFF';
+      pincel.fill();
+
+      pincel.fillStyle = color;
+      for (let fila = 0; fila < modulos; fila++) {
+        for (let columna = 0; columna < modulos; columna++) {
+          if (codigo.isDark(fila, columna)) pincel.fillRect(orilla + columna * lado, orilla + fila * lado, lado, lado);
+        }
+      }
+
+      pincel.font = '800 72px system-ui, sans-serif';
+      pincel.textAlign = 'center';
+      pincel.textBaseline = 'middle';
+      pincel.fillText(folio, 240, 534, 424);
+      return lienzo.toDataURL();
+    }
+
+    async function descargarQr() {
+      const folios = leerFolios();
+      const libro = new ExcelJS.Workbook();
+      const hoja = libro.addWorksheet('QR', { pageSetup: {
+        fitToPage: true,
+        fitToHeight: Math.ceil(folios.length / QR_POR_FILA ** 2),
+        horizontalCentered: true,
+        margins: { left: 0.25, right: 0.25, top: 0.25, bottom: 0.25, header: 0, footer: 0 },
+      } });
+      hoja.columns = Array(QR_POR_FILA).fill({ width: 23 });
+      qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+
+      try {
+        folios.forEach((folio, i) => {
+          const fila = Math.floor(i / QR_POR_FILA);
+          const columna = i % QR_POR_FILA;
+          hoja.getRow(fila + 1).height = 158;
+          Object.assign(hoja.getCell(fila + 1, columna + 1), { value: folio, alignment: { horizontal: 'center', vertical: 'middle', wrapText: true } });
+          hoja.addImage(libro.addImage({ base64: dibujarTarjeta(folio), extension: 'png' }), { tl: { col: columna, row: fila }, br: { col: columna + 1, row: fila + 1 }, editAs: 'twoCell' });
+        });
+      } catch {
+        avisoQr.textContent = 'Hay un folio demasiado largo para un QR';
+        return;
+      }
+
+      await descargarLibro(libro, 'QR');
+    }
+
+    function limpiarQr() {
+      foliosQr.value = '';
+      foliosQr.focus();
+      contarFolios();
+    }
+
+    foliosQr.addEventListener('input', contarFolios);
+    botonQr.addEventListener('click', descargarQr);
+    document.getElementById('limpiarQr').addEventListener('click', limpiarQr);
   </script>
 </body>
 </html>
