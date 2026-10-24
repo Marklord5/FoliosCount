@@ -25,6 +25,7 @@
       max-width: 340px;
       box-sizing: border-box;
     }
+    [hidden] { display: none !important; }
     h1 { font-size: 1.25rem; margin: 0 0 20px; }
     label { display: block; font-size: .9rem; margin-bottom: 6px; }
     .campo { position: relative; margin-bottom: 16px; }
@@ -87,8 +88,22 @@
       background: #0f1115;
       border-radius: 10px;
     }
-    .modos button { flex: auto; min-height: 36px; padding-inline: 4px; white-space: nowrap; }
+    .modos button { flex: auto; min-height: 36px; padding-inline: 2px; font-size: .9rem; white-space: nowrap; }
     .modos [aria-pressed="true"] { color: #60a5fa; background: #172033; }
+    nav.modos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    nav.modos button {
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 4px;
+      min-height: 56px;
+      padding: 6px 2px;
+      font-size: .8rem;
+      line-height: 1.2;
+      white-space: normal;
+    }
+    nav.modos button:hover:not([aria-pressed="true"]) { color: #e5e7eb; background: #1a1d23; }
+    nav.modos [aria-pressed="true"] { border-color: #1e3a8a; }
 
     #lista { counter-reset: seccion; }
     .seccion { counter-increment: seccion; margin-bottom: 14px; }
@@ -172,6 +187,108 @@
     #resultado strong { display: block; font-size: 2rem; color: #60a5fa; }
     #resultado.error { background: #2a1517; color: #fca5a5; }
     #aviso, #avisoQr { margin: 0; font-size: .9rem; color: #fca5a5; white-space: pre-line; }
+
+    #nombreIne { padding-right: 12px; font-size: 1rem; text-transform: uppercase; }
+    .lado { margin-bottom: 16px; }
+    .carga { position: relative; margin: 0; cursor: pointer; }
+    .carga input { position: absolute; width: 1px; height: 1px; padding: 0; opacity: 0; }
+    .tarjeta {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1284 / 810;
+      margin-top: 6px;
+      overflow: hidden;
+      color: #6b7280;
+      background: #0f1115;
+      border: 1px dashed #374151;
+      border-radius: 8px;
+      transition: border-color .15s;
+    }
+    .tarjeta > * { grid-area: 1 / 1; }
+    .carga:hover :is(.tarjeta, .archivo) { border-color: #6b7280; }
+    .carga:has(:focus-visible) :is(.tarjeta, .archivo) { outline: 2px solid #60a5fa; outline-offset: 2px; }
+    .tarjeta:has(.recorte:not([hidden])) { border-style: solid; }
+    .recorte { width: 100%; height: 100%; object-fit: cover; transition: opacity .15s; }
+    .vacio, .procesando { display: grid; justify-items: center; gap: 6px; font-size: .85rem; }
+    .procesando { display: none; color: #93c5fd; }
+    .cargando .vacio, .recorte:not([hidden]) ~ .vacio { display: none; }
+    .cargando .procesando { display: grid; }
+    .cargando .recorte { opacity: .3; }
+    .cargando .tarjeta { border-color: #1e3a8a; }
+    .giro { width: 24px; height: 24px; border: 3px solid #1e3a8a; border-top-color: #60a5fa; border-radius: 50%; animation: giro .8s linear infinite; }
+    @keyframes giro { to { rotate: 1turn; } }
+    @media (prefers-reduced-motion: reduce) { .giro { animation-duration: 3s; } }
+    .ajustar { margin-top: 8px; border-color: #374151; }
+    #avisoIne, #avisoUnir { margin: 0; font-size: .9rem; color: #9ca3af; white-space: pre-line; }
+    :is(#avisoIne, #avisoUnir).error { color: #fca5a5; }
+    .titulo { margin: 0 0 6px; font-size: .9rem; }
+    #tipoAnexo { margin-bottom: 8px; }
+    #cargaAnexo { margin-bottom: 16px; }
+    .archivo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      font-size: .85rem;
+      color: #9ca3af;
+      background: #0f1115;
+      border: 1px dashed #374151;
+      border-radius: 8px;
+      transition: border-color .15s;
+    }
+    .archivo svg { flex: none; }
+    .archivo span { flex: 1; overflow-wrap: anywhere; }
+    .archivo.listo { color: #e5e7eb; background: #172033; border: 1px solid #1e3a8a; }
+    #unir .archivo { margin-top: 6px; }
+    #listaUnir { margin: 8px 0 12px; padding: 0; list-style: none; counter-reset: pdf; }
+    #listaUnir li {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 0 4px 4px;
+      font-size: .85rem;
+      border-bottom: 1px solid #262b34;
+      counter-increment: pdf;
+    }
+    #listaUnir li::before { content: counter(pdf); min-width: 1.4em; color: #60a5fa; font-variant-numeric: tabular-nums; }
+    #listaUnir span { flex: 1; overflow-wrap: anywhere; }
+    .subir { width: 36px; height: 36px; display: grid; place-items: center; }
+    #listaUnir li:first-child .subir { visibility: hidden; }
+    #editor {
+      width: min(720px, 100% - 32px);
+      box-sizing: border-box;
+      padding: 16px;
+      color: inherit;
+      background: #1a1d23;
+      border: 0;
+      border-radius: 12px;
+    }
+    #editor::backdrop { background: rgba(0, 0, 0, .7); }
+    #editor p { margin: 0 0 12px; font-size: .9rem; }
+    .lienzo {
+      position: relative;
+      width: min(100%, 70vh * var(--proporcion, 1));
+      margin: auto;
+      touch-action: none;
+      user-select: none;
+      cursor: crosshair;
+    }
+    .lienzo img { display: block; width: 100%; border-radius: 4px; pointer-events: none; }
+    .lienzo svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+    .lienzo polygon { fill: rgba(96, 165, 250, .15); stroke: #60a5fa; stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .esquina {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      translate: -50% -50%;
+      background: rgba(96, 165, 250, .35);
+      border: 2px solid #60a5fa;
+      border-radius: 50%;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -179,10 +296,30 @@
     <h1>Calculadora de folios</h1>
 
     <nav class="modos">
-      <button type="button" data-modo="simple" aria-pressed="true">Simple</button>
-      <button type="button" data-modo="secciones" aria-pressed="false">Por secciones</button>
-      <button type="button" data-modo="acuse" aria-pressed="false">Acuse</button>
-      <button type="button" data-modo="qr" aria-pressed="false">QR</button>
+      <button type="button" data-modo="simple" aria-pressed="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 4L7 20M17 4l-2 16M4 9h16M3 15h16"/></svg>
+        Simple
+      </button>
+      <button type="button" data-modo="secciones" aria-pressed="false" title="Por secciones">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+        Secciones
+      </button>
+      <button type="button" data-modo="acuse" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H6a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3M9 3h6v3H9zM9 14l2 2 4-4"/></svg>
+        Acuse
+      </button>
+      <button type="button" data-modo="qr" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h3M21 18v3"/></svg>
+        QR
+      </button>
+      <button type="button" data-modo="ine" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M5 16c.5-1.3 1.6-2 3-2s2.5.7 3 2M14 10h5M14 14h4"/></svg>
+        INE
+      </button>
+      <button type="button" data-modo="unir" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H9a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7zM15 2v5h5M3 7v13a2 2 0 0 0 2 2h9"/></svg>
+        Unir PDF
+      </button>
     </nav>
 
     <section class="modo" id="simple">
@@ -327,6 +464,118 @@
       </button>
     </section>
 
+    <section class="modo" id="ine" hidden>
+      <div class="lado" data-lado="frente">
+        <label class="carga">
+          INE frontal
+          <input type="file" id="ineFrente" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
+          <span class="tarjeta">
+            <img class="recorte" alt="Recorte del frente" hidden>
+            <span class="vacio">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
+              Toca para subir la foto
+            </span>
+            <span class="procesando"><span class="giro"></span>Procesando…</span>
+          </span>
+        </label>
+        <button type="button" class="bloque ajustar" hidden>Ajustar esquinas</button>
+      </div>
+
+      <div class="lado" data-lado="reverso">
+        <label class="carga">
+          INE trasera
+          <input type="file" id="ineReverso" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
+          <span class="tarjeta">
+            <img class="recorte" alt="Recorte del reverso" hidden>
+            <span class="vacio">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
+              Toca para subir la foto
+            </span>
+            <span class="procesando"><span class="giro"></span>Procesando…</span>
+          </span>
+        </label>
+        <button type="button" class="bloque ajustar" hidden>Ajustar esquinas</button>
+      </div>
+
+      <label for="nombreIne">Nombre</label>
+      <div class="campo"><input type="text" id="nombreIne" autocapitalize="characters" placeholder="Se detecta al subir la INE"></div>
+
+      <p class="titulo" id="tituloAnexo">Agregar al PDF</p>
+      <div class="modos" id="tipoAnexo" role="group" aria-labelledby="tituloAnexo">
+        <button type="button" data-anexo="" aria-pressed="true">Nada</button>
+        <button type="button" data-anexo="el acuse" aria-pressed="false">Acuse</button>
+        <button type="button" data-anexo="la carta responsiva" aria-pressed="false">Carta responsiva</button>
+      </div>
+
+      <label class="carga" id="cargaAnexo" hidden>
+        <input type="file" id="anexoIne" accept="application/pdf,.pdf">
+        <span class="archivo">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 17v-6M9 14h6"/></svg>
+          <span></span>
+        </span>
+      </label>
+
+      <p id="avisoIne" aria-live="polite"></p>
+
+      <button type="button" class="bloque accion" id="generarPdf" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+        Generar PDF
+      </button>
+
+      <button type="button" class="bloque peligro" id="limpiarIne">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+        Borrar todo
+      </button>
+
+      <dialog id="editor">
+        <p>Arrastra los puntos a las esquinas de la tarjeta</p>
+        <div class="lienzo">
+          <img alt="Foto original">
+          <svg viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true"><polygon/></svg>
+          <span class="esquina"></span><span class="esquina"></span><span class="esquina"></span><span class="esquina"></span>
+        </div>
+        <button type="button" class="bloque accion" id="aplicarEsquinas">Aplicar</button>
+        <button type="button" class="bloque" id="cancelarEsquinas">Cancelar</button>
+      </dialog>
+    </section>
+
+    <section class="modo" id="unir" hidden>
+      <label class="carga">
+        PDF a unir, en este orden
+        <input type="file" id="pdfsUnir" accept="application/pdf,.pdf" multiple>
+        <span class="archivo">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 17v-6M9 14h6"/></svg>
+          <span>Toca para agregar PDF</span>
+        </span>
+      </label>
+
+      <ol id="listaUnir"></ol>
+
+      <p id="avisoUnir" aria-live="polite"></p>
+
+      <button type="button" class="bloque accion" id="unirPdf" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+        Unir y descargar
+      </button>
+
+      <button type="button" class="bloque peligro" id="limpiarUnir">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+        Borrar todo
+      </button>
+    </section>
+
+    <template id="plantillaPdf">
+      <li>
+        <span></span>
+        <button type="button" class="subir" aria-label="Mover arriba" title="Mover arriba">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+        <button type="button" class="quitar" aria-label="Quitar PDF" title="Quitar PDF">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </li>
+    </template>
+
     <template id="plantillaSeccion">
       <div class="seccion">
         <div class="cabecera">
@@ -347,6 +596,7 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
   <script src="logo.js"></script>
   <script>
     const inicial = document.getElementById('inicial');
@@ -774,6 +1024,484 @@
     formatos.addEventListener('change', contarFolios);
     botonQr.addEventListener('click', () => formatos.querySelector(':checked').value === 'PDF' ? descargarQrPdf() : descargarQrExcel());
     document.getElementById('limpiarQr').addEventListener('click', limpiarQr);
+
+    const OPENCV = 'https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js';
+    const TESSERACT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    const HEIC2ANY = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+    const ISNET = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm'; // el mismo modelo que rembg "isnet-general-use", en el navegador
+    const OPCIONES_ISNET = { model: 'isnet_quint8', proxyToWorker: true, output: { format: 'image/png' } };
+    const ANCHO = 1284; // 85.6 × 54 mm, proporción de la INE
+    const ALTO = 810;
+    const MAX_PIXELES = 16e6; // límite de canvas en iPhone
+    const MRZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<';
+    let herramientas = null;
+    let lector = null;
+    let segmentar = null;
+
+    function cargarScript(src) {
+      return new Promise((listo, falla) => document.head.append(Object.assign(document.createElement('script'), { src, onload: listo, onerror: falla })));
+    }
+
+    function prepararIne() {
+      herramientas ??= Promise.all([
+        import(ISNET).then(async ({ preload, segmentForeground }) => {
+          await preload(OPCIONES_ISNET);
+          segmentar = segmentForeground;
+        }),
+        cargarScript(OPENCV).then(async () => {
+          if (window.cv instanceof Promise) window.cv = await window.cv;
+          if (!cv.Mat) await new Promise(listo => cv.onRuntimeInitialized = listo);
+        }),
+        cargarScript(TESSERACT).then(async () => lector = await Tesseract.createWorker('spa')),
+      ]).catch(() => {
+        herramientas = null;
+        throw new Error('No se pudieron descargar las herramientas de recorte y lectura. Revisa tu conexión a internet.');
+      });
+      return herramientas;
+    }
+
+    function nuevoLienzo(ancho, alto) {
+      return Object.assign(document.createElement('canvas'), { width: Math.round(ancho), height: Math.round(alto) });
+    }
+
+    function recortar(fuente, ancho, alto, x = 0, y = 0, w = fuente.width, h = fuente.height) {
+      const lienzo = nuevoLienzo(ancho, alto);
+      lienzo.getContext('2d').drawImage(fuente, x, y, w, h, 0, 0, lienzo.width, lienzo.height);
+      return lienzo;
+    }
+
+    function escalar(fuente, lado) {
+      const escala = Math.min(1, lado / Math.max(fuente.width, fuente.height));
+      return recortar(fuente, fuente.width * escala, fuente.height * escala);
+    }
+
+    function girar(fuente) {
+      const lienzo = nuevoLienzo(fuente.width, fuente.height);
+      const pincel = lienzo.getContext('2d');
+      pincel.rotate(Math.PI);
+      pincel.drawImage(fuente, -fuente.width, -fuente.height);
+      return lienzo;
+    }
+
+    async function abrirImagen(archivo) {
+      let mapa;
+      try {
+        mapa = await createImageBitmap(archivo);
+      } catch {
+        try {
+          await cargarScript(HEIC2ANY);
+          mapa = await createImageBitmap(await heic2any({ blob: archivo, toType: 'image/jpeg', quality: .95 }));
+        } catch {
+          throw new Error('Solo se aceptan imágenes JPG, PNG o HEIC');
+        }
+      }
+      const escala = Math.min(1, Math.sqrt(MAX_PIXELES / (mapa.width * mapa.height)));
+      return recortar(mapa, mapa.width * escala, mapa.height * escala);
+    }
+
+    // Esquinas de la tarjeta en fracciones del ancho y alto de la imagen.
+    // Se detecta sobre la foto reducida a 1000 px; el recorte final se hace sobre la original.
+    async function detectar(imagen) {
+      const proporcion = Math.max(imagen.width, imagen.height) / Math.min(imagen.width, imagen.height);
+      if (proporcion > 1.53 && proporcion < 1.64) return [[0, 0], [1, 0], [1, 1], [0, 1]]; // ya es un escaneo o recorte de la tarjeta
+      const chica = escalar(imagen, 1000);
+      const { width: w, height: h } = chica;
+      const blob = await new Promise(listo => chica.toBlob(listo, 'image/jpeg', .92));
+      const silueta = recortar(await createImageBitmap(await segmentar(blob, OPCIONES_ISNET)), w, h);
+      const basura = [];
+      const mat = valor => (basura.push(valor), valor);
+      const mascara = mat(cv.imread(silueta));
+      const contornos = mat(new cv.MatVector());
+      cv.cvtColor(mascara, mascara, cv.COLOR_RGBA2GRAY);
+      cv.threshold(mascara, mascara, 127, 255, cv.THRESH_BINARY);
+      cv.morphologyEx(mascara, mascara, cv.MORPH_OPEN, mat(cv.Mat.ones(7, 7, cv.CV_8U)));
+      cv.findContours(mascara, contornos, mat(new cv.Mat()), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+      let contorno = null;
+      for (let i = 0; i < contornos.size(); i++) {
+        const opcion = mat(contornos.get(i));
+        if (!contorno || cv.contourArea(opcion) > cv.contourArea(contorno)) contorno = opcion;
+      }
+      const area = contorno ? cv.contourArea(contorno) / (w * h) : 0;
+      let puntos = null;
+
+      if (area > .1 && area < .9) {
+        const casco = mat(new cv.Mat());
+        const aproximado = mat(new cv.Mat());
+        cv.convexHull(contorno, casco, false, true);
+        const perimetro = cv.arcLength(casco, true);
+        for (let epsilon = .01; epsilon <= .08 && !puntos; epsilon += .01) {
+          cv.approxPolyDP(casco, aproximado, epsilon * perimetro, true);
+          if (aproximado.rows === 4) puntos = [0, 1, 2, 3].map(i => [aproximado.data32S[i * 2], aproximado.data32S[i * 2 + 1]]);
+        }
+        puntos ??= cv.RotatedRect.points(cv.minAreaRect(casco)).map(({ x, y }) => [x, y]);
+      }
+      basura.forEach(valor => valor.delete());
+      // Sin un contorno claro, o un escaneo donde la tarjeta ocupa casi toda la imagen: se usa completa
+      return puntos ? puntos.map(([x, y]) => [x / w, y / h]) : [[0, 0], [1, 0], [1, 1], [0, 1]];
+    }
+
+    // Sup-izq, sup-der, inf-der, inf-izq
+    function ordenar(puntos) {
+      const [cx, cy] = [0, 1].map(eje => puntos.reduce((suma, punto) => suma + punto[eje], 0) / 4);
+      const angulo = ([x, y]) => Math.atan2(y - cy, x - cx);
+      const ordenados = [...puntos].sort((a, b) => angulo(a) - angulo(b));
+      const sumas = ordenados.map(([x, y]) => x + y);
+      const inicio = sumas.indexOf(Math.min(...sumas));
+      return [...ordenados.slice(inicio), ...ordenados.slice(0, inicio)];
+    }
+
+    function enderezar(imagen, esquinas) {
+      let puntos = ordenar(esquinas.map(([x, y]) => [x * imagen.width, y * imagen.height]));
+      const lado = (a, b) => Math.hypot(puntos[a][0] - puntos[b][0], puntos[a][1] - puntos[b][1]);
+      if (lado(1, 2) + lado(3, 0) > lado(0, 1) + lado(2, 3)) puntos = [...puntos.slice(1), puntos[0]]; // vertical: queda horizontal
+
+      const foto = cv.imread(imagen);
+      const resultado = new cv.Mat();
+      const desde = cv.matFromArray(4, 1, cv.CV_32FC2, puntos.flat());
+      const hacia = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, ANCHO, 0, ANCHO, ALTO, 0, ALTO]);
+      const matriz = cv.getPerspectiveTransform(desde, hacia);
+      cv.warpPerspective(foto, resultado, matriz, new cv.Size(ANCHO, ALTO), cv.INTER_LINEAR);
+      const tarjeta = nuevoLienzo(ANCHO, ALTO);
+      cv.imshow(tarjeta, resultado);
+      [foto, resultado, desde, hacia, matriz].forEach(valor => valor.delete());
+      return tarjeta;
+    }
+
+    async function ocr(lienzo, permitidos = '') {
+      await lector.setParameters({ tessedit_pageseg_mode: '6', tessedit_char_whitelist: permitidos });
+      return (await lector.recognize(lienzo)).data;
+    }
+
+    // Líneas tipo pasaporte (MRZ) de la parte baja del reverso; vacío si no las hay
+    async function leerMrz(tarjeta) {
+      const { text } = await ocr(recortar(tarjeta, ANCHO, ALTO * .4, 0, ALTO * .6, ANCHO, ALTO * .4), MRZ);
+      const lineas = text.split('\n').map(linea => linea.replaceAll(' ', '')).filter(linea => linea.includes('<'));
+      return lineas.join('').split('<').length > 10 ? lineas : [];
+    }
+
+    // Bloque NOMBRE del frente, a la derecha de la foto
+    function zonaNombre(tarjeta) {
+      return recortar(tarjeta, ANCHO * .52, ALTO * .4, ANCHO * .28, ALTO * .2, ANCHO * .52, ALTO * .4);
+    }
+
+    // Pone la tarjeta al derecho. El reverso se reconoce por la MRZ; el frente, por qué lado se lee mejor.
+    async function orientar(tarjeta) {
+      const girada = girar(tarjeta);
+      for (const opcion of [tarjeta, girada]) {
+        const mrz = await leerMrz(opcion);
+        if (mrz.length) return { tarjeta: opcion, mrz, texto: '' };
+      }
+      const derecho = await ocr(zonaNombre(tarjeta));
+      const deCabeza = await ocr(zonaNombre(girada));
+      return derecho.confidence >= deCabeza.confidence
+        ? { tarjeta, mrz: [], texto: derecho.text }
+        : { tarjeta: girada, mrz: [], texto: deCabeza.text };
+    }
+
+    function normalizar(texto) {
+      return texto.toUpperCase().replace(/[ÁÉÍÓÚÜ]/g, letra => 'AEIOUU'['ÁÉÍÓÚÜ'.indexOf(letra)]);
+    }
+
+    function limpiar(texto) {
+      return normalizar(texto).replace(/SEXO.*/g, '').replace(/[^A-ZÑ]/g, ' ').split(' ').filter(palabra => palabra.length > 1).join(' ');
+    }
+
+    // APELLIDO1<APELLIDO2<<NOMBRE1<NOMBRE2 → APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2
+    function nombreMrz(mrz) {
+      for (const linea of [...mrz].reverse()) {
+        const partes = linea.match(/^([A-Z]+(?:<[A-Z]+)*)<<([A-Z]+(?:<[A-Z]+)*)/);
+        if (partes) return `${partes[1]} ${partes[2]}`.replaceAll('<', ' ');
+      }
+      return '';
+    }
+
+    // Las 3 líneas bajo NOMBRE: apellido paterno, materno y nombres
+    function nombreFrente(texto) {
+      const lineas = texto.split('\n').map(limpiar);
+      const inicio = lineas.findIndex(linea => linea.includes('NOMBRE'));
+      if (inicio < 0) return '';
+      const nombre = [];
+      for (const linea of lineas.slice(inicio + 1)) {
+        if (linea.includes('DOMICILIO') || nombre.length === 3) break;
+        if (linea) nombre.push(linea);
+      }
+      return nombre.join(' ');
+    }
+
+    // La MRZ escribe la Ñ como N; se recupera de las palabras con Ñ del frente
+    function conEnie(nombre, textoFrente) {
+      const enies = Object.fromEntries(limpiar(textoFrente).split(' ').filter(palabra => palabra.includes('Ñ')).map(palabra => [palabra.replaceAll('Ñ', 'N'), palabra]));
+      return nombre.split(' ').filter(Boolean).map(palabra => enies[palabra] ?? palabra).join(' ');
+    }
+
+    const INE_MAX_BYTES = 15 * 1024 * 1024;
+    const archivosIne = { frente: document.getElementById('ineFrente'), reverso: document.getElementById('ineReverso') };
+    const nombreIne = document.getElementById('nombreIne');
+    const avisoIne = document.getElementById('avisoIne');
+    const generarPdf = document.getElementById('generarPdf');
+    const tipoAnexo = document.getElementById('tipoAnexo');
+    const cargaAnexo = document.getElementById('cargaAnexo');
+    const anexoIne = document.getElementById('anexoIne');
+    const editor = document.getElementById('editor');
+    const lienzo = editor.querySelector('.lienzo');
+    let ladosIne = { frente: {}, reverso: {} };
+    let colaIne = Promise.resolve();
+    let nombreEditado = false;
+    let editando = '';
+    let esquinasEditor = [];
+    let arrastre = null;
+
+    function descargarArchivo(datos, nombre) {
+      const enlace = document.createElement('a');
+      enlace.href = URL.createObjectURL(datos);
+      enlace.download = nombre;
+      enlace.click();
+    }
+
+    async function juntarPdfs(archivos) {
+      const unido = await PDFLib.PDFDocument.create();
+      for (const archivo of archivos) {
+        let documento;
+        try {
+          documento = await PDFLib.PDFDocument.load(await archivo.arrayBuffer(), { ignoreEncryption: true });
+        } catch {
+          throw new Error(`${archivo.name} no es un PDF válido`);
+        }
+        (await unido.copyPages(documento, documento.getPageIndices())).forEach(pagina => unido.addPage(pagina));
+      }
+      return new Blob([await unido.save()], { type: 'application/pdf' });
+    }
+
+    function avisarIne(texto, error = false) {
+      avisoIne.textContent = texto;
+      avisoIne.className = error ? 'error' : '';
+    }
+
+    function anexoElegido() {
+      return tipoAnexo.querySelector('[aria-pressed="true"]').dataset.anexo;
+    }
+
+    function actualizarAnexo() {
+      const anexo = anexoElegido();
+      const archivo = anexoIne.files[0];
+      cargaAnexo.hidden = !anexo;
+      cargaAnexo.querySelector('.archivo').classList.toggle('listo', Boolean(archivo));
+      cargaAnexo.querySelector('.archivo span').textContent = archivo?.name ?? `Toca para subir el PDF de ${anexo}`;
+      generarPdf.disabled = !(ladosIne.frente.tarjeta && ladosIne.reverso.tarjeta) || (anexo && !archivo);
+    }
+
+    function elegirAnexo(event) {
+      tipoAnexo.querySelectorAll('button').forEach(boton => boton.setAttribute('aria-pressed', boton === event.currentTarget));
+      actualizarAnexo();
+    }
+
+    function mostrarLado(lado, estado) {
+      const caja = document.querySelector(`[data-lado="${lado}"]`);
+      const recorte = caja.querySelector('.recorte');
+      recorte.hidden = !estado?.tarjeta;
+      caja.querySelector('.ajustar').hidden = !estado?.tarjeta;
+      if (estado?.tarjeta) recorte.src = estado.tarjeta.toDataURL('image/jpeg', .9);
+      else recorte.removeAttribute('src');
+    }
+
+    function marcarCargando(lado, activo) {
+      document.querySelector(`[data-lado="${lado}"]`).classList.toggle('cargando', activo);
+    }
+
+    // De uno en uno: hay un solo lector de Tesseract y sus parámetros cambian entre lecturas
+    function procesarLado(lado, estado) {
+      marcarCargando(lado, true);
+      colaIne = colaIne.then(async () => {
+        if (ladosIne[lado] !== estado) return;
+        let error = '';
+        try {
+          await prepararIne();
+          estado.imagen ??= await abrirImagen(estado.archivo);
+          estado.esquinas ??= await detectar(estado.imagen);
+          Object.assign(estado, await orientar(enderezar(estado.imagen, estado.esquinas)));
+        } catch (falla) {
+          error = falla.message;
+        }
+        if (ladosIne[lado] !== estado) return;
+        if (error) {
+          ladosIne[lado] = {};
+          archivosIne[lado].value = '';
+          avisarIne(error, true);
+        }
+        marcarCargando(lado, false);
+        mostrarLado(lado, ladosIne[lado]);
+        revisarIne();
+      });
+    }
+
+    function revisarIne() {
+      const { frente, reverso } = ladosIne;
+      if (frente.mrz?.length && reverso.tarjeta && !reverso.mrz.length) {
+        ladosIne = { frente: reverso, reverso: frente };
+        [archivosIne.frente.files, archivosIne.reverso.files] = [archivosIne.reverso.files, archivosIne.frente.files];
+        Object.keys(ladosIne).forEach(lado => mostrarLado(lado, ladosIne[lado]));
+        avisarIne('Venían al revés: intercambié frente y reverso');
+      }
+      const lados = Object.values(ladosIne);
+      const mrz = lados.find(lado => lado.mrz?.length)?.mrz ?? [];
+      const texto = lados.find(lado => lado.texto)?.texto ?? '';
+      if (!nombreEditado) nombreIne.value = conEnie(nombreMrz(mrz), texto) || nombreFrente(texto);
+      actualizarAnexo();
+    }
+
+    function cambiarImagen(event) {
+      const lado = event.target.closest('.lado').dataset.lado;
+      const archivo = event.target.files[0];
+      const estado = ladosIne[lado] = archivo?.size <= INE_MAX_BYTES ? { archivo } : {};
+      mostrarLado(lado, null);
+      avisarIne(archivo?.size > INE_MAX_BYTES ? 'La imagen pesa más de 15 MB' : '', true);
+      if (estado.archivo) procesarLado(lado, estado);
+      else event.target.value = '';
+      revisarIne();
+    }
+
+    async function descargarPdfIne() {
+      const nombre = `${nombreIne.value.toUpperCase().replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'INE'}.pdf`;
+      const pdf = new jspdf.jsPDF({ unit: 'in', format: 'letter' }); // carta a 200 dpi: frente en (208, 200) px y reverso en (208, 1150) px
+      pdf.addImage(ladosIne.frente.tarjeta, 'JPEG', 208 / 200, 200 / 200, ANCHO / 200, ALTO / 200);
+      pdf.addImage(ladosIne.reverso.tarjeta, 'JPEG', 208 / 200, 1150 / 200, ANCHO / 200, ALTO / 200);
+      const ine = pdf.output('blob');
+      if (!anexoElegido()) return descargarArchivo(ine, nombre);
+      try {
+        descargarArchivo(await juntarPdfs([ine, anexoIne.files[0]]), nombre);
+        avisarIne('');
+      } catch (error) {
+        avisarIne(error.message, true);
+      }
+    }
+
+    function limpiarIne() {
+      Object.values(archivosIne).forEach(input => input.value = '');
+      ladosIne = { frente: {}, reverso: {} };
+      Object.keys(ladosIne).forEach(lado => {
+        mostrarLado(lado, null);
+        marcarCargando(lado, false);
+      });
+      nombreIne.value = '';
+      nombreEditado = false;
+      anexoIne.value = '';
+      tipoAnexo.querySelector('button').click();
+      avisarIne('');
+    }
+
+    function dibujarEsquinas() {
+      lienzo.querySelectorAll('.esquina').forEach((marca, i) => {
+        marca.style.left = `${esquinasEditor[i][0] * 100}%`;
+        marca.style.top = `${esquinasEditor[i][1] * 100}%`;
+      });
+      lienzo.querySelector('polygon').setAttribute('points', esquinasEditor.join(' '));
+    }
+
+    async function abrirEditor(event) {
+      editando = event.target.closest('.lado').dataset.lado;
+      esquinasEditor = ladosIne[editando].esquinas.map(punto => [...punto]);
+      const imagen = lienzo.querySelector('img');
+      imagen.src = escalar(ladosIne[editando].imagen, 1000).toDataURL('image/jpeg', .9);
+      await imagen.decode();
+      lienzo.style.setProperty('--proporcion', imagen.naturalWidth / imagen.naturalHeight);
+      dibujarEsquinas();
+      editor.showModal();
+    }
+
+    function moverEsquina(event) {
+      if (!event.buttons) return;
+      const caja = lienzo.getBoundingClientRect();
+      const punto = [(event.clientX - caja.left) / caja.width, (event.clientY - caja.top) / caja.height];
+      if (event.type === 'pointerdown') {
+        lienzo.setPointerCapture(event.pointerId);
+        const distancias = esquinasEditor.map(([x, y]) => Math.hypot((x - punto[0]) * caja.width, (y - punto[1]) * caja.height));
+        const i = distancias.indexOf(Math.min(...distancias));
+        arrastre = { i, desfase: [esquinasEditor[i][0] - punto[0], esquinasEditor[i][1] - punto[1]] };
+      }
+      esquinasEditor[arrastre.i] = punto.map((valor, eje) => Math.min(1, Math.max(0, valor + arrastre.desfase[eje])));
+      dibujarEsquinas();
+    }
+
+    function aplicarEsquinas() {
+      const { archivo, imagen } = ladosIne[editando];
+      const estado = ladosIne[editando] = { archivo, imagen, esquinas: esquinasEditor };
+      editor.close();
+      procesarLado(editando, estado);
+      revisarIne();
+    }
+
+    document.querySelector('[data-modo="ine"]').addEventListener('click', () => prepararIne().catch(() => {}));
+    Object.values(archivosIne).forEach(input => input.addEventListener('change', cambiarImagen));
+    document.querySelectorAll('.ajustar').forEach(boton => boton.addEventListener('click', abrirEditor));
+    nombreIne.addEventListener('input', () => nombreEditado = nombreIne.value !== '');
+    generarPdf.addEventListener('click', descargarPdfIne);
+    document.getElementById('limpiarIne').addEventListener('click', limpiarIne);
+    lienzo.addEventListener('pointerdown', moverEsquina);
+    lienzo.addEventListener('pointermove', moverEsquina);
+    document.getElementById('aplicarEsquinas').addEventListener('click', aplicarEsquinas);
+    document.getElementById('cancelarEsquinas').addEventListener('click', () => editor.close());
+    tipoAnexo.querySelectorAll('button').forEach(boton => boton.addEventListener('click', elegirAnexo));
+    anexoIne.addEventListener('change', actualizarAnexo);
+
+    const pdfsUnir = document.getElementById('pdfsUnir');
+    const listaUnir = document.getElementById('listaUnir');
+    const avisoUnir = document.getElementById('avisoUnir');
+    const unirPdf = document.getElementById('unirPdf');
+    let archivosUnir = [];
+
+    function avisarUnir(texto, error = false) {
+      avisoUnir.textContent = texto;
+      avisoUnir.className = error ? 'error' : '';
+    }
+
+    function mostrarPdfs() {
+      listaUnir.replaceChildren(...archivosUnir.map(archivo => {
+        const fila = document.getElementById('plantillaPdf').content.firstElementChild.cloneNode(true);
+        fila.querySelector('span').textContent = archivo.name;
+        return fila;
+      }));
+      unirPdf.disabled = archivosUnir.length < 2;
+    }
+
+    function agregarPdfs() {
+      archivosUnir.push(...pdfsUnir.files);
+      pdfsUnir.value = '';
+      avisarUnir('');
+      mostrarPdfs();
+    }
+
+    function ordenarPdfs(event) {
+      const boton = event.target.closest('button');
+      if (!boton) return;
+      const i = [...listaUnir.children].indexOf(boton.closest('li'));
+      const [archivo] = archivosUnir.splice(i, 1);
+      if (boton.classList.contains('subir')) archivosUnir.splice(i - 1, 0, archivo);
+      mostrarPdfs();
+    }
+
+    async function unirPdfs() {
+      unirPdf.disabled = true;
+      avisarUnir('Uniendo…');
+      try {
+        descargarArchivo(await juntarPdfs(archivosUnir), 'PDF unido.pdf');
+        avisarUnir('');
+      } catch (error) {
+        avisarUnir(error.message, true);
+      }
+      unirPdf.disabled = archivosUnir.length < 2;
+    }
+
+    function limpiarUnir() {
+      archivosUnir = [];
+      avisarUnir('');
+      mostrarPdfs();
+    }
+
+    pdfsUnir.addEventListener('change', agregarPdfs);
+    listaUnir.addEventListener('click', ordenarPdfs);
+    unirPdf.addEventListener('click', unirPdfs);
+    document.getElementById('limpiarUnir').addEventListener('click', limpiarUnir);
   </script>
 </body>
 </html>

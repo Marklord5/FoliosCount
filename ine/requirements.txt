@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-multipart
+rembg[cpu]
+opencv-python-headless<5  # la 5 ya no trae CascadeClassifier
+pillow-heif
+pypdf[crypto]  # unir PDF, también los cifrados sin contraseña de apertura
