@@ -5,58 +5,119 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calculadora de folios</title>
   <style>
+    :root {
+      --fondo: #0b0912;
+      --superficie: #15111f;
+      --panel: #1a1527;
+      --campo: #0f0c18;
+      --borde: #2a2240;
+      --borde-fuerte: #3f3460;
+      --texto: #f1edfc;
+      --texto-2: #a9a1c2;
+      --texto-3: #6c6488;
+      --acento: #a78bfa;
+      --acento-claro: #c4b5fd;
+      --acento-fuerte: #7c3aed;
+      --acento-suave: #221a3d;
+      --acento-borde: #4c3a8f;
+      --degradado: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+      --peligro: #fda4af;
+      --peligro-fondo: #26121c;
+      --peligro-borde: #6b1d3a;
+      --exito: #86efac;
+      --curva: cubic-bezier(.22, 1, .36, 1);
+      --radio: 12px;
+    }
     body {
-      font-family: system-ui, sans-serif;
-      background: #0f1115;
-      color: #e5e7eb;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(900px 500px at 15% -10%, rgba(124, 58, 237, .28), transparent 60%),
+        radial-gradient(700px 500px at 100% 110%, rgba(192, 38, 211, .14), transparent 60%),
+        var(--fondo);
+      background-attachment: fixed;
+      color: var(--texto);
       color-scheme: dark;
       display: grid;
       place-items: center;
       min-height: 100vh;
       margin: 0;
       padding: 16px;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
     }
     main {
-      background: #1a1d23;
+      background: linear-gradient(180deg, rgba(167, 139, 250, .06), transparent 120px), rgba(21, 17, 31, .8);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
       padding: 28px;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, .4);
+      border: 1px solid var(--borde);
+      border-radius: 20px;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 24px 64px -24px rgba(76, 29, 149, .55);
       width: 100%;
-      max-width: 340px;
+      max-width: 360px;
       box-sizing: border-box;
     }
     [hidden] { display: none !important; }
-    h1 { font-size: 1.25rem; margin: 0 0 20px; }
-    label { display: block; font-size: .9rem; margin-bottom: 6px; }
+    /* Fondo arcade: estrellas, enemigos y una nave (dibujado en canvas) */
+    #espacio { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; opacity: .75; }
+    /* Lo que aparece dentro de un modo entra suave */
+    .anexo, .contenido li { animation: aparecer .3s var(--curva); }
+    @keyframes aparecer { from { opacity: 0; translate: 0 6px; } }
+    @media (prefers-reduced-motion: reduce) {
+      .anexo, .contenido li { animation: none; }
+    }
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.3rem;
+      letter-spacing: -.01em;
+      margin: 0 0 20px;
+    }
+    h1::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--degradado);
+      box-shadow: 0 0 12px rgba(139, 92, 246, .8);
+    }
+    label { display: block; font-size: .85rem; font-weight: 500; color: var(--texto-2); margin-bottom: 6px; }
     .campo { position: relative; margin-bottom: 16px; }
     input, textarea {
       display: block;
       width: 100%;
       box-sizing: border-box;
-      padding: 10px 46px 10px 12px;
+      padding: 11px 46px 11px 14px;
       font-size: 1.1rem;
-      color: inherit;
-      background: #0f1115;
-      border: 1px solid #374151;
-      border-radius: 8px;
+      color: var(--texto);
+      background: var(--campo);
+      border: 1px solid var(--borde);
+      border-radius: var(--radio);
+      transition: border-color .2s, box-shadow .2s, background .2s;
     }
-    :is(input, textarea):focus { outline: 2px solid #60a5fa; border-color: transparent; }
-    ::placeholder { color: #6b7280; }
-    input[type="color"] { height: 44px; padding: 4px; cursor: pointer; }
-    textarea { padding-right: 12px; font: inherit; font-size: .9rem; white-space: pre; resize: vertical; }
+    :is(input, textarea):hover { border-color: var(--borde-fuerte); }
+    :is(input, textarea):focus {
+      outline: none;
+      border-color: var(--acento);
+      box-shadow: 0 0 0 4px rgba(167, 139, 250, .18);
+    }
+    ::placeholder { color: var(--texto-3); }
+    input[type="color"] { height: 46px; padding: 4px; cursor: pointer; }
+    textarea { padding-right: 14px; font: inherit; font-size: .9rem; white-space: pre; resize: vertical; }
     button {
       font: inherit;
-      color: #9ca3af;
+      color: var(--texto-2);
       background: none;
       border: 1px solid transparent;
-      border-radius: 7px;
+      border-radius: 10px;
       cursor: pointer;
       touch-action: manipulation;
-      transition: color .15s, background .15s, filter .15s, opacity .15s, visibility .15s, transform .15s;
+      transition: color .2s, background .2s, border-color .2s, box-shadow .2s, filter .2s, opacity .2s, visibility .2s, transform .15s;
     }
-    button:hover:not(:disabled) { filter: brightness(1.25); }
-    button:active:not(:disabled) { transform: scale(.94); }
-    button:focus-visible { outline: 2px solid #60a5fa; }
+    button:hover:not(:disabled) { filter: brightness(1.2); }
+    button:active:not(:disabled) { transform: scale(.96); }
+    button:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
     button:disabled { opacity: .4; cursor: not-allowed; }
     .borrar {
       position: absolute;
@@ -72,24 +133,50 @@
       justify-content: center;
       gap: 8px;
       width: 100%;
-      min-height: 44px;
+      min-height: 46px;
       margin-top: 12px;
+      font-weight: 500;
+      border-radius: var(--radio);
     }
-    .peligro, .borrar, .quitar { color: #fca5a5; }
-    .accion { color: #93c5fd; }
-    .bloque.peligro { background: #2a1517; border-color: #7f1d1d; }
-    .bloque.accion { background: #172033; border-color: #1e3a8a; }
+    .peligro, .borrar, .quitar { color: var(--peligro); }
+    .accion { color: var(--acento-claro); }
+    .bloque.peligro { background: var(--peligro-fondo); border-color: var(--peligro-borde); }
+    .bloque.accion {
+      color: #fff;
+      background: var(--degradado);
+      border-color: rgba(196, 181, 253, .25);
+      box-shadow: 0 8px 24px -10px rgba(124, 58, 237, .8);
+    }
+    .bloque.accion:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 10px 28px -8px rgba(124, 58, 237, .95); }
+    .bloque.accion:disabled { box-shadow: none; }
+    #agregar { color: var(--acento-claro); background: transparent; border: 1px dashed var(--acento-borde); box-shadow: none; }
+    #agregar:hover { background: var(--acento-suave); }
 
+    /* Selector de modos con indicador deslizante */
     .modos {
+      position: relative;
       display: flex;
       gap: 4px;
       margin-bottom: 20px;
       padding: 4px;
-      background: #0f1115;
-      border-radius: 10px;
+      background: var(--campo);
+      border: 1px solid var(--borde);
+      border-radius: 14px;
     }
-    .modos button { flex: auto; min-height: 36px; padding-inline: 2px; font-size: .9rem; white-space: nowrap; }
-    .modos [aria-pressed="true"] { color: #60a5fa; background: #172033; }
+    .modos button { position: relative; z-index: 1; flex: auto; min-height: 36px; padding-inline: 2px; font-size: .9rem; white-space: nowrap; }
+    .modos [aria-pressed="true"] { color: #fff; }
+    .modos button:hover:not([aria-pressed="true"]) { color: var(--texto); }
+    .indicador {
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-radius: 10px;
+      background: var(--degradado);
+      box-shadow: 0 6px 18px -6px rgba(124, 58, 237, .9), 0 0 0 1px rgba(196, 181, 253, .25) inset;
+      pointer-events: none;
+    }
+    .modos.listo .indicador { transition: translate .45s var(--curva), width .45s var(--curva), height .45s var(--curva); }
+    .modos:not(.listo) .indicador { opacity: 0; }
     nav.modos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
     nav.modos button {
       display: grid;
@@ -102,25 +189,27 @@
       line-height: 1.2;
       white-space: normal;
     }
-    nav.modos button:hover:not([aria-pressed="true"]) { color: #e5e7eb; background: #1a1d23; }
-    nav.modos [aria-pressed="true"] { border-color: #1e3a8a; }
+    nav.modos button:hover:not([aria-pressed="true"]) { background: rgba(167, 139, 250, .08); }
+    nav.modos svg { transition: transform .3s var(--curva); }
+    nav.modos [aria-pressed="true"] svg { transform: scale(1.12); }
 
     #lista { counter-reset: seccion; }
-    .seccion { counter-increment: seccion; margin-bottom: 14px; }
+    .seccion { counter-increment: seccion; margin-bottom: 14px; animation: aparecer .3s var(--curva); }
     .cabecera {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-bottom: 4px;
       font-size: .9rem;
+      color: var(--texto-2);
     }
     .cabecera span::before { content: 'Sección ' counter(seccion); }
-    output { margin-left: auto; color: #60a5fa; font-weight: 600; }
-    .seccion.error output { color: #fca5a5; font-weight: 400; }
+    output { margin-left: auto; color: var(--acento); font-weight: 600; }
+    .seccion.error output { color: var(--peligro); font-weight: 400; }
     .quitar { width: 36px; height: 36px; display: grid; place-items: center; }
     .seccion:only-child .quitar { visibility: hidden; }
     .par { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .par input { padding-right: 12px; }
+    .par input { padding-right: 14px; }
 
     table {
       width: 100%;
@@ -129,67 +218,87 @@
       font-size: .9rem;
       font-variant-numeric: tabular-nums;
     }
-    th, td { padding: 8px 6px; text-align: right; border-bottom: 1px solid #262b34; }
+    th, td { padding: 9px 6px; text-align: right; border-bottom: 1px solid var(--borde); }
     th:first-child, td:first-child { text-align: left; }
-    th { color: #9ca3af; font-weight: 500; }
-    tfoot td { border: 0; font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
+    th { color: var(--texto-3); font-weight: 500; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+    tbody tr { transition: background .2s; }
+    tbody tr:hover { background: rgba(167, 139, 250, .05); }
+    tfoot td { border: 0; font-size: 1.1rem; font-weight: 700; color: var(--acento); }
 
     .formatos { display: grid; gap: 8px; margin: 0 0 16px; padding: 0; border: 0; }
-    .formatos legend { margin-bottom: 6px; padding: 0; font-size: .9rem; }
+    .formatos legend { margin-bottom: 6px; padding: 0; font-size: .85rem; font-weight: 500; color: var(--texto-2); }
     .formato {
       display: flex;
       align-items: center;
       gap: 12px;
       min-height: 44px;
       margin: 0;
-      padding: 12px;
+      padding: 14px;
       font-size: .8rem;
+      font-weight: 400;
       line-height: 1.4;
-      color: #9ca3af;
-      background: #0f1115;
-      border: 1px solid #374151;
-      border-radius: 8px;
+      color: var(--texto-2);
+      background: var(--campo);
+      border: 1px solid var(--borde);
+      border-radius: var(--radio);
       cursor: pointer;
-      transition: color .15s, background .15s, border-color .15s;
+      transition: color .2s, background .2s, border-color .2s, box-shadow .2s;
     }
-    .formato:hover { border-color: #6b7280; }
-    .formato:has(:checked) { color: #cbd5e1; background: #172033; border-color: #60a5fa; }
-    .formato:has(:focus-visible) { outline: 2px solid #60a5fa; outline-offset: 2px; }
+    .formato:hover { border-color: var(--borde-fuerte); }
+    .formato:has(:checked) {
+      color: var(--texto-2);
+      background: var(--acento-suave);
+      border-color: var(--acento);
+      box-shadow: 0 0 0 4px rgba(167, 139, 250, .12);
+    }
+    .formato:has(:focus-visible) { outline: 2px solid var(--acento); outline-offset: 2px; }
     .formato input { position: absolute; width: auto; opacity: 0; pointer-events: none; }
     .formato svg { flex: none; }
     .formato span { flex: 1; }
-    .formato strong { display: block; font-size: .95rem; color: #e5e7eb; }
+    .formato strong { display: block; font-size: .95rem; color: var(--texto); }
     .formato small {
       margin-left: 6px;
       padding: 2px 8px;
-      font-size: .75rem;
-      font-weight: 500;
-      color: #93c5fd;
-      background: #1e3a8a;
+      font-size: .7rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--degradado);
       border-radius: 999px;
       vertical-align: 1px;
     }
-    .formato .elegido path { opacity: 0; transition: opacity .15s; }
-    .formato :checked ~ .elegido { color: #60a5fa; }
+    .formato .elegido path { opacity: 0; transition: opacity .2s; }
+    .formato :checked ~ .elegido { color: var(--acento); }
     .formato :checked ~ .elegido path { opacity: 1; }
 
     @media (prefers-reduced-motion: reduce) {
-      button, .formato, .formato .elegido path { transition: none; }
+      *, ::before, ::after { transition: none !important; }
+      .seccion { animation: none; }
     }
     #resultado {
       margin: 8px 0 0;
-      padding: 16px;
-      background: #172033;
-      border-radius: 8px;
+      padding: 18px 16px;
+      background: var(--acento-suave);
+      border: 1px solid var(--acento-borde);
+      border-radius: var(--radio);
       text-align: center;
       font-size: .9rem;
+      color: var(--texto-2);
+      transition: background .25s, border-color .25s, color .25s;
     }
-    #resultado strong { display: block; font-size: 2rem; color: #60a5fa; }
-    #resultado.error { background: #2a1517; color: #fca5a5; }
-    #aviso, #avisoQr { margin: 0; font-size: .9rem; color: #fca5a5; white-space: pre-line; }
+    #resultado strong {
+      display: block;
+      font-size: 2.2rem;
+      letter-spacing: -.02em;
+      background: linear-gradient(90deg, #c4b5fd, #a78bfa 50%, #e879f9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: aparecer .3s var(--curva);
+    }
+    #resultado.error { background: var(--peligro-fondo); border-color: var(--peligro-borde); color: var(--peligro); }
+    #aviso, #avisoQr { margin: 0; font-size: .9rem; color: var(--peligro); white-space: pre-line; }
 
-    #nombreIne { padding-right: 12px; font-size: 1rem; text-transform: uppercase; }
-    .lado { margin-bottom: 16px; }
+    #nombreIne { padding-right: 14px; font-size: 1rem; text-transform: uppercase; }
     .carga { position: relative; margin: 0; cursor: pointer; }
     .carga input { position: absolute; width: 1px; height: 1px; padding: 0; opacity: 0; }
     .tarjeta {
@@ -198,49 +307,134 @@
       aspect-ratio: 1284 / 810;
       margin-top: 6px;
       overflow: hidden;
-      color: #6b7280;
-      background: #0f1115;
-      border: 1px dashed #374151;
-      border-radius: 8px;
-      transition: border-color .15s;
+      color: var(--texto-3);
+      background: var(--campo);
+      border: 1px dashed var(--borde-fuerte);
+      border-radius: var(--radio);
+      transition: border-color .2s, background .2s;
     }
     .tarjeta > * { grid-area: 1 / 1; }
-    .carga:hover :is(.tarjeta, .archivo) { border-color: #6b7280; }
-    .carga:has(:focus-visible) :is(.tarjeta, .archivo) { outline: 2px solid #60a5fa; outline-offset: 2px; }
+    .carga:hover :is(.tarjeta, .archivo) { border-color: var(--acento); background: rgba(167, 139, 250, .04); }
+    .carga:has(:focus-visible) :is(.tarjeta, .archivo) { outline: 2px solid var(--acento); outline-offset: 2px; }
     .tarjeta:has(.recorte:not([hidden])) { border-style: solid; }
-    .recorte { width: 100%; height: 100%; object-fit: cover; transition: opacity .15s; }
+    .tarjeta:has(.pdf:not([hidden])) { background: var(--acento-suave); border: 1px solid var(--acento-borde); }
+    .recorte { width: 100%; height: 100%; object-fit: cover; transition: opacity .2s; }
     .vacio, .procesando { display: grid; justify-items: center; gap: 6px; font-size: .85rem; }
-    .procesando { display: none; color: #93c5fd; }
+    .procesando { display: none; color: var(--acento-claro); }
     .cargando .vacio, .recorte:not([hidden]) ~ .vacio { display: none; }
     .cargando .procesando { display: grid; }
     .cargando .recorte { opacity: .3; }
-    .cargando .tarjeta { border-color: #1e3a8a; }
-    .giro { width: 24px; height: 24px; border: 3px solid #1e3a8a; border-top-color: #60a5fa; border-radius: 50%; animation: giro .8s linear infinite; }
+    .cargando .tarjeta { border-color: var(--acento-borde); }
+    .giro { width: 24px; height: 24px; border: 3px solid var(--acento-borde); border-top-color: var(--acento); border-radius: 50%; animation: giro .8s linear infinite; }
     @keyframes giro { to { rotate: 1turn; } }
     @media (prefers-reduced-motion: reduce) { .giro { animation-duration: 3s; } }
-    .ajustar { margin-top: 8px; border-color: #374151; }
-    #avisoIne, #avisoUnir { margin: 0; font-size: .9rem; color: #9ca3af; white-space: pre-line; }
-    :is(#avisoIne, #avisoUnir).error { color: #fca5a5; }
-    .titulo { margin: 0 0 6px; font-size: .9rem; }
-    #tipoAnexo { margin-bottom: 8px; }
-    #cargaAnexo { margin-bottom: 16px; }
+    .ajustar { margin-top: 8px; border-color: var(--borde-fuerte); }
+    #avisoIne, #avisoUnir { margin: 0; font-size: .9rem; color: var(--texto-2); white-space: pre-line; }
+    :is(#avisoIne, #avisoUnir).error { color: var(--peligro); }
+    .hoja { aspect-ratio: 1700 / 2200; }
+    .hoja .recorte { object-fit: contain; }
+    .herramientas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .herramientas .ajustar { grid-column: 1 / -1; margin-top: 0; }
+    .girar { display: grid; place-items: center; min-height: 40px; border-color: var(--borde-fuerte); }
+    .pdf { display: grid; justify-items: center; gap: 8px; padding: 12px; font-size: .8rem; color: var(--texto); overflow-wrap: anywhere; text-align: center; }
+    .pdf svg { color: var(--acento); }
+    .carga.encima .tarjeta { color: var(--acento-claro); background: var(--acento-suave); border-color: var(--acento); }
+
+    .ine, .ine-docs { display: grid; gap: 24px; }
+    .panel h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-size: 1rem; }
+    .paso {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      font-size: .75rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--degradado);
+      border-radius: 50%;
+      box-shadow: 0 4px 12px -4px rgba(124, 58, 237, .9);
+    }
+    .nota { margin: -6px 0 12px; font-size: .85rem; line-height: 1.4; color: var(--texto-2); }
+    .lados { display: grid; gap: 16px; }
+    .opciones { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .opcion {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 16px 0 10px;
+      font-size: .9rem;
+      background: var(--campo);
+      border-color: var(--borde-fuerte);
+      border-radius: 999px;
+    }
+    .opcion[aria-pressed="true"] { color: var(--texto); background: var(--acento-suave); border-color: var(--acento); }
+    .opcion .marca path { opacity: 0; transition: opacity .2s; }
+    .opcion[aria-pressed="true"] .marca { color: var(--acento); }
+    .opcion[aria-pressed="true"] .marca path { opacity: 1; }
+    .anexos { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 16px; }
+    .anexos:not(:has(.anexo:not([hidden]))) { display: none; }
+    .contenido { margin: 4px 0 12px; padding: 0; list-style: none; counter-reset: parte; }
+    .contenido li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 0;
+      font-size: .9rem;
+      border-bottom: 1px solid var(--borde);
+      counter-increment: parte;
+    }
+    .contenido li::before { content: counter(parte); min-width: 1.2em; color: var(--acento); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .estado { margin-left: auto; font-size: .8rem; color: var(--texto-3); white-space: nowrap; }
+    .estado.listo { color: var(--exito); }
+    .estado.procesando { color: var(--acento-claro); }
+
+    main:has(#ine:not([hidden])) { max-width: 1080px; }
+    @media (min-width: 640px) {
+      main:has(#ine:not([hidden])) nav.modos { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .lados { grid-template-columns: 1fr 1fr; }
+    }
+    /* En móvil los paneles se apilan sin marco ni título, como siempre */
+    .columnas { display: grid; }
+    @media (max-width: 959px) {
+      .columnas .panel h2 { display: none; }
+    }
+    @media (min-width: 960px) {
+      .ine { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+      .panel { padding: 20px; background: rgba(26, 21, 39, .72); border: 1px solid var(--borde); border-radius: 16px; }
+      .resumen { position: sticky; top: 16px; }
+
+      /* Modo PC: cada opción a dos columnas, datos a la izquierda y resultado a la derecha */
+      main, main:has(#ine:not([hidden])) { max-width: 1200px; padding: 32px 36px; }
+      main nav.modos { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .columnas { grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+      .ine { grid-template-columns: minmax(0, 1fr) 380px; }
+      #simple .columnas { grid-template-columns: 1fr 1fr; align-items: stretch; }
+      #simple .resumen { display: flex; flex-direction: column; }
+      #simple #resultado { flex: 1; display: grid; place-content: center; margin: 0; }
+      #simple #resultado strong { font-size: 3.2rem; }
+      .panel > h2 + table { margin-top: 0; }
+      .panel > .campo:last-child { margin-bottom: 0; }
+      #pegado, #foliosQr { min-height: 280px; }
+      #listaUnir:empty { display: none; }
+    }
     .archivo {
       display: flex;
       align-items: center;
       gap: 10px;
-      min-height: 44px;
+      min-height: 46px;
       box-sizing: border-box;
-      padding: 10px 12px;
+      padding: 12px 14px;
       font-size: .85rem;
-      color: #9ca3af;
-      background: #0f1115;
-      border: 1px dashed #374151;
-      border-radius: 8px;
-      transition: border-color .15s;
+      color: var(--texto-2);
+      background: var(--campo);
+      border: 1px dashed var(--borde-fuerte);
+      border-radius: var(--radio);
+      transition: border-color .2s, background .2s;
     }
-    .archivo svg { flex: none; }
+    .archivo svg { flex: none; color: var(--acento); }
     .archivo span { flex: 1; overflow-wrap: anywhere; }
-    .archivo.listo { color: #e5e7eb; background: #172033; border: 1px solid #1e3a8a; }
+    .archivo.listo { color: var(--texto); background: var(--acento-suave); border: 1px solid var(--acento-borde); }
     #unir .archivo { margin-top: 6px; }
     #listaUnir { margin: 8px 0 12px; padding: 0; list-style: none; counter-reset: pdf; }
     #listaUnir li {
@@ -249,24 +443,28 @@
       gap: 4px;
       padding: 4px 0 4px 4px;
       font-size: .85rem;
-      border-bottom: 1px solid #262b34;
+      border-bottom: 1px solid var(--borde);
       counter-increment: pdf;
+      animation: aparecer .3s var(--curva);
     }
-    #listaUnir li::before { content: counter(pdf); min-width: 1.4em; color: #60a5fa; font-variant-numeric: tabular-nums; }
+    #listaUnir li::before { content: counter(pdf); min-width: 1.4em; color: var(--acento); font-weight: 600; font-variant-numeric: tabular-nums; }
     #listaUnir span { flex: 1; overflow-wrap: anywhere; }
     .subir { width: 36px; height: 36px; display: grid; place-items: center; }
     #listaUnir li:first-child .subir { visibility: hidden; }
     #editor {
       width: min(720px, 100% - 32px);
       box-sizing: border-box;
-      padding: 16px;
+      padding: 20px;
       color: inherit;
-      background: #1a1d23;
-      border: 0;
-      border-radius: 12px;
+      background: var(--superficie);
+      border: 1px solid var(--borde);
+      border-radius: 20px;
+      box-shadow: 0 24px 64px -16px rgba(76, 29, 149, .6);
     }
-    #editor::backdrop { background: rgba(0, 0, 0, .7); }
+    #editor[open] { animation: aparecer .3s var(--curva); }
+    #editor::backdrop { background: rgba(8, 5, 18, .75); backdrop-filter: blur(4px); }
     #editor p { margin: 0 0 12px; font-size: .9rem; }
+    #cancelarEsquinas { border-color: var(--borde-fuerte); }
     .lienzo {
       position: relative;
       width: min(100%, 70vh * var(--proporcion, 1));
@@ -275,16 +473,16 @@
       user-select: none;
       cursor: crosshair;
     }
-    .lienzo img { display: block; width: 100%; border-radius: 4px; pointer-events: none; }
+    .lienzo img { display: block; width: 100%; border-radius: 6px; pointer-events: none; }
     .lienzo svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-    .lienzo polygon { fill: rgba(96, 165, 250, .15); stroke: #60a5fa; stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .lienzo polygon { fill: rgba(167, 139, 250, .18); stroke: var(--acento); stroke-width: 2; vector-effect: non-scaling-stroke; }
     .esquina {
       position: absolute;
       width: 24px;
       height: 24px;
       translate: -50% -50%;
-      background: rgba(96, 165, 250, .35);
-      border: 2px solid #60a5fa;
+      background: rgba(167, 139, 250, .35);
+      border: 2px solid var(--acento);
       border-radius: 50%;
       box-sizing: border-box;
       pointer-events: none;
@@ -292,6 +490,7 @@
   </style>
 </head>
 <body>
+  <canvas id="espacio" aria-hidden="true"></canvas>
   <main>
     <h1>Calculadora de folios</h1>
 
@@ -323,212 +522,297 @@
     </nav>
 
     <section class="modo" id="simple">
-    <label for="inicial">Folio inicial</label>
-    <div class="campo">
-      <input type="text" id="inicial" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 1001" autofocus>
-      <button type="button" class="borrar" id="borrarInicial" aria-label="Borrar folio inicial" title="Borrar (Esc)" tabindex="-1">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-    </div>
+      <div class="columnas">
+        <section class="panel" aria-labelledby="tituloSimple1">
+          <h2 id="tituloSimple1"><span class="paso">1</span>Rango de folios</h2>
+          <label for="inicial">Folio inicial</label>
+          <div class="campo">
+            <input type="text" id="inicial" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 1001" autofocus>
+            <button type="button" class="borrar" id="borrarInicial" aria-label="Borrar folio inicial" title="Borrar (Esc)" tabindex="-1">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
 
-    <label for="final">Folio final</label>
-    <div class="campo">
-      <input type="text" id="final" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 1050">
-      <button type="button" class="borrar" id="borrarFinal" aria-label="Borrar folio final" title="Borrar (Esc)" tabindex="-1">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-    </div>
+          <label for="final">Folio final</label>
+          <div class="campo">
+            <input type="text" id="final" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 1050">
+            <button type="button" class="borrar" id="borrarFinal" aria-label="Borrar folio final" title="Borrar (Esc)" tabindex="-1">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+        </section>
 
-    <p id="resultado" aria-live="polite">Escribe ambos folios</p>
+        <aside class="panel resumen" aria-labelledby="tituloSimple2">
+          <h2 id="tituloSimple2"><span class="paso">2</span>Total</h2>
+          <p id="resultado" aria-live="polite">Escribe ambos folios</p>
 
-    <button type="button" class="bloque accion" id="copiarFolios" disabled>
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
-      <span>Copiar folios</span>
-    </button>
+          <button type="button" class="bloque accion" id="copiarFolios" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <span>Copiar folios</span>
+          </button>
 
-    <button type="button" class="bloque peligro" id="borrarTodo" disabled>
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
-      Borrar todo
-    </button>
+          <button type="button" class="bloque peligro" id="borrarTodo" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+            Borrar todo
+          </button>
+        </aside>
+      </div>
     </section>
 
     <section class="modo" id="secciones" hidden>
-      <div id="lista"></div>
+      <div class="columnas">
+        <section class="panel" aria-labelledby="tituloSecciones1">
+          <h2 id="tituloSecciones1"><span class="paso">1</span>Secciones</h2>
+          <div id="lista"></div>
 
-      <button type="button" class="bloque accion" id="agregar">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-        Agregar sección
-      </button>
+          <button type="button" class="bloque accion" id="agregar">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Agregar sección
+          </button>
+        </section>
 
-      <table id="resumen">
-        <thead>
-          <tr><th>Sección</th><th>Inicial</th><th>Final</th><th>Folios</th></tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-          <tr><td>Total</td><td></td><td></td><td id="total">0</td></tr>
-        </tfoot>
-      </table>
+        <aside class="panel resumen" aria-labelledby="tituloSecciones2">
+          <h2 id="tituloSecciones2"><span class="paso">2</span>Resumen</h2>
+          <table id="resumen">
+            <thead>
+              <tr><th>Sección</th><th>Inicial</th><th>Final</th><th>Folios</th></tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr><td>Total</td><td></td><td></td><td id="total">0</td></tr>
+            </tfoot>
+          </table>
 
-      <button type="button" class="bloque accion" id="copiar" disabled>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
-        <span>Copiar para Excel</span>
-      </button>
+          <button type="button" class="bloque accion" id="copiar" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <span>Copiar para Excel</span>
+          </button>
 
-      <button type="button" class="bloque peligro" id="reiniciar">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
-        Borrar todo
-      </button>
+          <button type="button" class="bloque peligro" id="reiniciar">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+            Borrar todo
+          </button>
+        </aside>
+      </div>
     </section>
 
     <section class="modo" id="acuse" hidden>
-      <div class="modos" id="tipo">
-        <button type="button" aria-pressed="true">Montaje</button>
-        <button type="button" aria-pressed="false">Desmontaje</button>
+      <div class="columnas">
+        <section class="panel" aria-labelledby="tituloAcuse1">
+          <h2 id="tituloAcuse1"><span class="paso">1</span>Datos del acuse</h2>
+          <div class="modos" id="tipo">
+            <button type="button" aria-pressed="true">Montaje</button>
+            <button type="button" aria-pressed="false">Desmontaje</button>
+          </div>
+
+          <label for="pegado">Categorías y folios (una por línea)</label>
+          <div class="campo">
+            <textarea id="pegado" rows="8" placeholder="Kohlmann 13846 14405&#10;CaterInc 14406 14430"></textarea>
+          </div>
+
+          <label for="solicitante">Solicitante</label>
+          <div class="campo"><input type="text" id="solicitante" placeholder="Ej. Andrea Barragán"></div>
+
+          <label for="area">Área</label>
+          <div class="campo"><input type="text" id="area" placeholder="Ej. Equipo Experiencia Culinaria"></div>
+
+          <label for="observaciones">Observaciones</label>
+          <div class="campo"><input type="text" id="observaciones"></div>
+        </section>
+
+        <aside class="panel resumen" aria-labelledby="tituloAcuse2">
+          <h2 id="tituloAcuse2"><span class="paso">2</span>Vista previa</h2>
+          <p id="aviso" aria-live="polite"></p>
+
+          <table id="vista">
+            <thead>
+              <tr><th>Categoría</th><th>Inicial</th><th>Final</th><th>Total</th></tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr><td>Total</td><td></td><td></td><td id="totalAcuse">0</td></tr>
+            </tfoot>
+          </table>
+
+          <button type="button" class="bloque accion" id="descargar" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+            Descargar Excel
+          </button>
+
+          <button type="button" class="bloque peligro" id="limpiarAcuse">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+            Borrar todo
+          </button>
+        </aside>
       </div>
-
-      <label for="pegado">Categorías y folios (una por línea)</label>
-      <div class="campo">
-        <textarea id="pegado" rows="8" placeholder="Kohlmann 13846 14405&#10;CaterInc 14406 14430"></textarea>
-      </div>
-
-      <label for="solicitante">Solicitante</label>
-      <div class="campo"><input type="text" id="solicitante" placeholder="Ej. Andrea Barragán"></div>
-
-      <label for="area">Área</label>
-      <div class="campo"><input type="text" id="area" placeholder="Ej. Equipo Experiencia Culinaria"></div>
-
-      <label for="observaciones">Observaciones</label>
-      <div class="campo"><input type="text" id="observaciones"></div>
-
-      <p id="aviso" aria-live="polite"></p>
-
-      <table id="vista">
-        <thead>
-          <tr><th>Categoría</th><th>Inicial</th><th>Final</th><th>Total</th></tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-          <tr><td>Total</td><td></td><td></td><td id="totalAcuse">0</td></tr>
-        </tfoot>
-      </table>
-
-      <button type="button" class="bloque accion" id="descargar" disabled>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
-        Descargar Excel
-      </button>
-
-      <button type="button" class="bloque peligro" id="limpiarAcuse">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
-        Borrar todo
-      </button>
     </section>
 
     <section class="modo" id="qr" hidden>
-      <label for="foliosQr">Folios (uno por línea)</label>
-      <div class="campo">
-        <textarea id="foliosQr" rows="8" placeholder="FOLIO-1001&#10;FOLIO-1002"></textarea>
+      <div class="columnas">
+        <section class="panel" aria-labelledby="tituloQr1">
+          <h2 id="tituloQr1"><span class="paso">1</span>Folios</h2>
+          <label for="foliosQr">Folios (uno por línea)</label>
+          <div class="campo">
+            <textarea id="foliosQr" rows="8" placeholder="FOLIO-1001&#10;FOLIO-1002"></textarea>
+          </div>
+
+          <label for="colorQr">Color del QR</label>
+          <div class="campo"><input type="color" id="colorQr" value="#000000"></div>
+        </section>
+
+        <aside class="panel resumen" aria-labelledby="tituloQr2">
+          <h2 id="tituloQr2"><span class="paso">2</span>Formato y descarga</h2>
+          <p id="avisoQr" aria-live="polite"></p>
+
+          <fieldset class="formatos" id="formatos">
+            <legend>Formato</legend>
+
+            <label class="formato">
+              <input type="radio" name="formato" value="PDF" checked>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></svg>
+              <span><strong>PDF <small>Recomendado</small></strong>Para imprimir: 130 por hoja, igual en cualquier equipo.</span>
+              <svg class="elegido" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+            </label>
+
+            <label class="formato">
+              <input type="radio" name="formato" value="Excel">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>
+              <span><strong>Excel</strong>Para editar: una tarjeta por celda, 9 por fila.</span>
+              <svg class="elegido" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+            </label>
+          </fieldset>
+
+          <button type="button" class="bloque accion" id="descargarQr" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+            <span>Descargar PDF</span>
+          </button>
+
+          <button type="button" class="bloque peligro" id="limpiarQr">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+            Borrar todo
+          </button>
+        </aside>
       </div>
-
-      <label for="colorQr">Color del QR</label>
-      <div class="campo"><input type="color" id="colorQr" value="#000000"></div>
-
-      <p id="avisoQr" aria-live="polite"></p>
-
-      <fieldset class="formatos" id="formatos">
-        <legend>Formato</legend>
-
-        <label class="formato">
-          <input type="radio" name="formato" value="PDF" checked>
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></svg>
-          <span><strong>PDF <small>Recomendado</small></strong>Para imprimir: 130 por hoja, igual en cualquier equipo.</span>
-          <svg class="elegido" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
-        </label>
-
-        <label class="formato">
-          <input type="radio" name="formato" value="Excel">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>
-          <span><strong>Excel</strong>Para editar: una tarjeta por celda, 9 por fila.</span>
-          <svg class="elegido" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
-        </label>
-      </fieldset>
-
-      <button type="button" class="bloque accion" id="descargarQr" disabled>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
-        <span>Descargar PDF</span>
-      </button>
-
-      <button type="button" class="bloque peligro" id="limpiarQr">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
-        Borrar todo
-      </button>
     </section>
 
     <section class="modo" id="ine" hidden>
-      <div class="lado" data-lado="frente">
-        <label class="carga">
-          INE frontal
-          <input type="file" id="ineFrente" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
-          <span class="tarjeta">
-            <img class="recorte" alt="Recorte del frente" hidden>
-            <span class="vacio">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
-              Toca para subir la foto
-            </span>
-            <span class="procesando"><span class="giro"></span>Procesando…</span>
-          </span>
-        </label>
-        <button type="button" class="bloque ajustar" hidden>Ajustar esquinas</button>
+      <div class="ine">
+        <div class="ine-docs">
+          <section class="panel" aria-labelledby="tituloCredencial">
+            <h2 id="tituloCredencial"><span class="paso">1</span>Credencial</h2>
+            <div class="lados">
+              <div class="lado" data-lado="frente">
+                <label class="carga">
+                  Frente
+                  <input type="file" id="ineFrente" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
+                  <span class="tarjeta">
+                    <img class="recorte" alt="Recorte del frente" hidden>
+                    <span class="vacio">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
+                      Toca o arrastra la foto
+                    </span>
+                    <span class="procesando"><span class="giro"></span>Procesando…</span>
+                  </span>
+                </label>
+                <button type="button" class="bloque ajustar" hidden>Ajustar esquinas</button>
+              </div>
+              <div class="lado" data-lado="reverso">
+                <label class="carga">
+                  Reverso
+                  <input type="file" id="ineReverso" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
+                  <span class="tarjeta">
+                    <img class="recorte" alt="Recorte del reverso" hidden>
+                    <span class="vacio">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
+                      Toca o arrastra la foto
+                    </span>
+                    <span class="procesando"><span class="giro"></span>Procesando…</span>
+                  </span>
+                </label>
+                <button type="button" class="bloque ajustar" hidden>Ajustar esquinas</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="tituloAnexos">
+            <h2 id="tituloAnexos"><span class="paso">2</span>Documentos adicionales</h2>
+            <p class="nota">Elige qué más lleva el PDF. Si subes una foto, se recorta y queda como escaneada.</p>
+            <div class="opciones" role="group" aria-labelledby="tituloAnexos">
+              <button type="button" class="opcion" data-anexo="acuse" aria-pressed="false"><svg class="marca" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>Acuse</button>
+              <button type="button" class="opcion" data-anexo="carta" aria-pressed="false"><svg class="marca" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>Carta responsiva</button>
+            </div>
+            <div class="anexos">
+              <div class="anexo" data-anexo="acuse" hidden>
+                <label class="carga">
+                  Acuse
+                  <input type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
+                  <span class="tarjeta hoja">
+                    <img class="recorte" alt="Acuse escaneado" hidden>
+                    <span class="vacio">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
+                      PDF o foto
+                    </span>
+                    <span class="pdf" hidden><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></svg><span></span></span>
+                    <span class="procesando"><span class="giro"></span>Escaneando…</span>
+                  </span>
+                </label>
+                <div class="herramientas" hidden>
+                  <button type="button" class="girar" data-giro="-1" aria-label="Girar a la izquierda" title="Girar a la izquierda"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8M3 3v5h5"/></svg></button>
+                  <button type="button" class="girar" data-giro="1" aria-label="Girar a la derecha" title="Girar a la derecha"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg></button>
+                  <button type="button" class="bloque ajustar">Ajustar esquinas</button>
+                </div>
+              </div>
+              <div class="anexo" data-anexo="carta" hidden>
+                <label class="carga">
+                  Carta responsiva
+                  <input type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
+                  <span class="tarjeta hoja">
+                    <img class="recorte" alt="Carta responsiva escaneado" hidden>
+                    <span class="vacio">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
+                      PDF o foto
+                    </span>
+                    <span class="pdf" hidden><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></svg><span></span></span>
+                    <span class="procesando"><span class="giro"></span>Escaneando…</span>
+                  </span>
+                </label>
+                <div class="herramientas" hidden>
+                  <button type="button" class="girar" data-giro="-1" aria-label="Girar a la izquierda" title="Girar a la izquierda"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8M3 3v5h5"/></svg></button>
+                  <button type="button" class="girar" data-giro="1" aria-label="Girar a la derecha" title="Girar a la derecha"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg></button>
+                  <button type="button" class="bloque ajustar">Ajustar esquinas</button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="panel resumen" aria-labelledby="tituloPdf">
+          <h2 id="tituloPdf"><span class="paso">3</span>PDF final</h2>
+          <label for="nombreIne">Nombre</label>
+          <div class="campo"><input type="text" id="nombreIne" autocapitalize="characters" placeholder="Se detecta al subir la INE"></div>
+
+          <ol class="contenido" aria-label="Contenido del PDF">
+            <li data-parte="ine">INE<span class="estado"></span></li>
+            <li data-parte="acuse" hidden>Acuse<span class="estado"></span></li>
+            <li data-parte="carta" hidden>Carta responsiva<span class="estado"></span></li>
+          </ol>
+
+          <p id="avisoIne" aria-live="polite"></p>
+
+          <button type="button" class="bloque accion" id="generarPdf" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+            Generar PDF
+          </button>
+
+          <button type="button" class="bloque peligro" id="limpiarIne">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+            Borrar todo
+          </button>
+        </aside>
       </div>
-
-      <div class="lado" data-lado="reverso">
-        <label class="carga">
-          INE trasera
-          <input type="file" id="ineReverso" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
-          <span class="tarjeta">
-            <img class="recorte" alt="Recorte del reverso" hidden>
-            <span class="vacio">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
-              Toca para subir la foto
-            </span>
-            <span class="procesando"><span class="giro"></span>Procesando…</span>
-          </span>
-        </label>
-        <button type="button" class="bloque ajustar" hidden>Ajustar esquinas</button>
-      </div>
-
-      <label for="nombreIne">Nombre</label>
-      <div class="campo"><input type="text" id="nombreIne" autocapitalize="characters" placeholder="Se detecta al subir la INE"></div>
-
-      <p class="titulo" id="tituloAnexo">Agregar al PDF</p>
-      <div class="modos" id="tipoAnexo" role="group" aria-labelledby="tituloAnexo">
-        <button type="button" data-anexo="" aria-pressed="true">Nada</button>
-        <button type="button" data-anexo="el acuse" aria-pressed="false">Acuse</button>
-        <button type="button" data-anexo="la carta responsiva" aria-pressed="false">Carta responsiva</button>
-      </div>
-
-      <label class="carga" id="cargaAnexo" hidden>
-        <input type="file" id="anexoIne" accept="application/pdf,.pdf">
-        <span class="archivo">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 17v-6M9 14h6"/></svg>
-          <span></span>
-        </span>
-      </label>
-
-      <p id="avisoIne" aria-live="polite"></p>
-
-      <button type="button" class="bloque accion" id="generarPdf" disabled>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
-        Generar PDF
-      </button>
-
-      <button type="button" class="bloque peligro" id="limpiarIne">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
-        Borrar todo
-      </button>
 
       <dialog id="editor">
-        <p>Arrastra los puntos a las esquinas de la tarjeta</p>
+        <p>Arrastra los puntos a las esquinas</p>
         <div class="lienzo">
           <img alt="Foto original">
           <svg viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true"><polygon/></svg>
@@ -540,28 +824,36 @@
     </section>
 
     <section class="modo" id="unir" hidden>
-      <label class="carga">
-        PDF a unir, en este orden
-        <input type="file" id="pdfsUnir" accept="application/pdf,.pdf" multiple>
-        <span class="archivo">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 17v-6M9 14h6"/></svg>
-          <span>Toca para agregar PDF</span>
-        </span>
-      </label>
+      <div class="columnas">
+        <section class="panel" aria-labelledby="tituloUnir1">
+          <h2 id="tituloUnir1"><span class="paso">1</span>Archivos</h2>
+          <label class="carga">
+            PDF a unir, en este orden
+            <input type="file" id="pdfsUnir" accept="application/pdf,.pdf" multiple>
+            <span class="archivo">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 17v-6M9 14h6"/></svg>
+              <span>Toca para agregar PDF</span>
+            </span>
+          </label>
 
-      <ol id="listaUnir"></ol>
+          <ol id="listaUnir"></ol>
+        </section>
 
-      <p id="avisoUnir" aria-live="polite"></p>
+        <aside class="panel resumen" aria-labelledby="tituloUnir2">
+          <h2 id="tituloUnir2"><span class="paso">2</span>Unir</h2>
+          <p id="avisoUnir" aria-live="polite"></p>
 
-      <button type="button" class="bloque accion" id="unirPdf" disabled>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
-        Unir y descargar
-      </button>
+          <button type="button" class="bloque accion" id="unirPdf" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+            Unir y descargar
+          </button>
 
-      <button type="button" class="bloque peligro" id="limpiarUnir">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
-        Borrar todo
-      </button>
+          <button type="button" class="bloque peligro" id="limpiarUnir">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>
+            Borrar todo
+          </button>
+        </aside>
+      </div>
     </section>
 
     <template id="plantillaPdf">
@@ -665,12 +957,86 @@
     const resumen = document.getElementById('resumen');
     const copiar = document.getElementById('copiar');
 
-    function cambiarModo(event) {
-      const modo = event.currentTarget.dataset.modo;
-      modos.forEach(boton => boton.setAttribute('aria-pressed', boton === event.currentTarget));
-      document.querySelectorAll('.modo').forEach(seccion => seccion.hidden = seccion.id !== modo);
-      document.querySelector(`#${modo} :is(input, textarea)`).focus();
+    const tarjeta = document.querySelector('main');
+    const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
+    const curva = 'cubic-bezier(.22, 1, .36, 1)';
+    let redimension;
+    let turno = 0;
+
+    // Cada pieza del modo entra en cascada desde el lado del botón elegido
+    function entrar(seccion, direccion) {
+      const piezas = seccion.querySelectorAll('.panel > *');
+      [...piezas].forEach((pieza, i) => pieza.animate([
+        { opacity: 0, translate: `${28 * direccion}px 6px`, filter: 'blur(6px)' },
+        { opacity: 1, translate: '0 0', filter: 'blur(0)' }
+      ], { duration: 420, delay: Math.min(i, 8) * 35, easing: curva, fill: 'backwards' }));
     }
+
+    async function cambiarModo(event) {
+      const boton = event.currentTarget;
+      const nuevo = document.getElementById(boton.dataset.modo);
+      const actual = document.querySelector('.modo:not([hidden])');
+      const botones = [...modos];
+      const direccion = botones.indexOf(boton) >= botones.findIndex(b => b.dataset.modo === actual.id) ? 1 : -1;
+      const mio = ++turno;
+      modos.forEach(b => b.setAttribute('aria-pressed', b === boton));
+
+      // Volvió a elegir la opción que todavía estaba saliendo: se queda
+      if (nuevo === actual) {
+        const saliendo = actual.getAnimations();
+        if (!saliendo.length) return;
+        saliendo.forEach(a => a.cancel());
+        if (!sinMovimiento.matches) entrar(actual, direccion);
+        return;
+      }
+
+      // Lo actual sale hacia el lado contrario antes de cambiar
+      if (!sinMovimiento.matches) {
+        await actual.animate([
+          { opacity: 1, translate: '0 0', filter: 'blur(0)' },
+          { opacity: 0, translate: `${-20 * direccion}px 0`, filter: 'blur(4px)' }
+        ], { duration: 160, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' }).finished.catch(() => {});
+        if (mio !== turno) return;
+      }
+
+      const antes = tarjeta.getBoundingClientRect();
+      redimension?.cancel();
+      actual.hidden = true;
+      actual.getAnimations().forEach(a => a.cancel());
+      nuevo.hidden = false;
+      nuevo.querySelector('input, textarea').focus({ preventScroll: true });
+      if (sinMovimiento.matches) return;
+
+      // La tarjeta pasa suave de su tamaño anterior al nuevo
+      const despues = tarjeta.getBoundingClientRect();
+      const tamano = r => ({ width: `${r.width}px`, height: `${r.height}px`, maxWidth: 'none', overflow: 'clip' });
+      redimension = tarjeta.animate([tamano(antes), tamano(despues)], { duration: 480, easing: curva });
+      entrar(nuevo, direccion);
+    }
+
+    // Píldora que se desliza al botón activo en cada selector
+    document.querySelectorAll('.modos').forEach(grupo => {
+      const indicador = grupo.appendChild(document.createElement('span'));
+      indicador.className = 'indicador';
+      const mover = () => {
+        const activo = grupo.querySelector('[aria-pressed="true"]');
+        Object.assign(indicador.style, {
+          translate: `${activo.offsetLeft}px ${activo.offsetTop}px`,
+          width: `${activo.offsetWidth}px`,
+          height: `${activo.offsetHeight}px`
+        });
+      };
+      new ResizeObserver(() => {
+        mover();
+        requestAnimationFrame(() => grupo.classList.add('listo'));
+      }).observe(grupo);
+      grupo.addEventListener('click', event => {
+        if (!event.target.closest('button')) return;
+        mover();
+        // Pequeño estirón de la píldora al moverse
+        if (!sinMovimiento.matches) indicador.animate([{ scale: '1' }, { scale: '1.08 .9' }, { scale: '1' }], { duration: 450, easing: curva });
+      });
+    });
 
     function agregarSeccion() {
       lista.append(document.getElementById('plantillaSeccion').content.cloneNode(true));
@@ -1027,13 +1393,16 @@
 
     const OPENCV = 'https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js';
     const TESSERACT = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
-    const HEIC2ANY = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+    const HEIC = 'https://cdn.jsdelivr.net/npm/heic-to@1.6.5/dist/heic-to.js'; // libheif reciente: heic2any no abre las fotos de iPhone nuevos
     const ISNET = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm'; // el mismo modelo que rembg "isnet-general-use", en el navegador
     const OPCIONES_ISNET = { model: 'isnet_quint8', proxyToWorker: true, output: { format: 'image/png' } };
     const ANCHO = 1284; // 85.6 × 54 mm, proporción de la INE
     const ALTO = 810;
+    const HOJA_ANCHO = 1700; // carta a 200 dpi
+    const HOJA_ALTO = 2200;
     const MAX_PIXELES = 16e6; // límite de canvas en iPhone
     const MRZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<';
+    const ENTERA = [[0, 0], [1, 0], [1, 1], [0, 1]]; // esquinas de la imagen completa
     let herramientas = null;
     let lector = null;
     let segmentar = null;
@@ -1075,11 +1444,14 @@
       return recortar(fuente, fuente.width * escala, fuente.height * escala);
     }
 
-    function girar(fuente) {
-      const lienzo = nuevoLienzo(fuente.width, fuente.height);
+    // En cuartos de vuelta a la derecha; por defecto, de cabeza
+    function girar(fuente, cuartos = 2) {
+      const acostada = cuartos % 2;
+      const lienzo = nuevoLienzo(acostada ? fuente.height : fuente.width, acostada ? fuente.width : fuente.height);
       const pincel = lienzo.getContext('2d');
-      pincel.rotate(Math.PI);
-      pincel.drawImage(fuente, -fuente.width, -fuente.height);
+      pincel.translate(lienzo.width / 2, lienzo.height / 2);
+      pincel.rotate(cuartos * Math.PI / 2);
+      pincel.drawImage(fuente, -fuente.width / 2, -fuente.height / 2);
       return lienzo;
     }
 
@@ -1089,8 +1461,8 @@
         mapa = await createImageBitmap(archivo);
       } catch {
         try {
-          await cargarScript(HEIC2ANY);
-          mapa = await createImageBitmap(await heic2any({ blob: archivo, toType: 'image/jpeg', quality: .95 }));
+          const { heicTo } = await import(HEIC);
+          mapa = await heicTo({ blob: archivo, type: 'bitmap' });
         } catch {
           throw new Error('Solo se aceptan imágenes JPG, PNG o HEIC');
         }
@@ -1099,21 +1471,42 @@
       return recortar(mapa, mapa.width * escala, mapa.height * escala);
     }
 
-    // Esquinas de la tarjeta en fracciones del ancho y alto de la imagen.
-    // Se detecta sobre la foto reducida a 1000 px; el recorte final se hace sobre la original.
-    async function detectar(imagen) {
-      const proporcion = Math.max(imagen.width, imagen.height) / Math.min(imagen.width, imagen.height);
-      if (proporcion > 1.53 && proporcion < 1.64) return [[0, 0], [1, 0], [1, 1], [0, 1]]; // ya es un escaneo o recorte de la tarjeta
-      const chica = escalar(imagen, 1000);
-      const { width: w, height: h } = chica;
+    // La tarjeta se separa del fondo con el modelo de recorte
+    async function siluetaTarjeta(chica) {
       const blob = await new Promise(listo => chica.toBlob(listo, 'image/jpeg', .92));
-      const silueta = recortar(await createImageBitmap(await segmentar(blob, OPCIONES_ISNET)), w, h);
-      const basura = [];
-      const mat = valor => (basura.push(valor), valor);
-      const mascara = mat(cv.imread(silueta));
-      const contornos = mat(new cv.MatVector());
+      const mascara = cv.imread(recortar(await createImageBitmap(await segmentar(blob, OPCIONES_ISNET)), chica.width, chica.height));
       cv.cvtColor(mascara, mascara, cv.COLOR_RGBA2GRAY);
       cv.threshold(mascara, mascara, 127, 255, cv.THRESH_BINARY);
+      return mascara;
+    }
+
+    // La hoja es lo claro y sin color (brillo − 2 × saturación): así la mesa, aunque sea clara, queda fuera
+    function siluetaHoja(chica) {
+      const mascara = cv.imread(chica);
+      const canales = new cv.MatVector();
+      const nucleo = cv.Mat.ones(25, 25, cv.CV_8U);
+      cv.cvtColor(mascara, mascara, cv.COLOR_RGBA2RGB);
+      cv.cvtColor(mascara, mascara, cv.COLOR_RGB2HSV);
+      cv.split(mascara, canales);
+      const [saturacion, brillo] = [canales.get(1), canales.get(2)];
+      cv.addWeighted(brillo, 1, saturacion, -2, 0, mascara);
+      cv.threshold(mascara, mascara, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+      cv.morphologyEx(mascara, mascara, cv.MORPH_CLOSE, nucleo); // tapa el texto
+      [canales, saturacion, brillo, nucleo].forEach(valor => valor.delete());
+      return mascara;
+    }
+
+    // Esquinas de la tarjeta (o la hoja) en fracciones del ancho y alto de la imagen.
+    // Se detecta sobre la foto reducida a 1000 px; el recorte final se hace sobre la original.
+    async function detectar(imagen, esTarjeta = true) {
+      const proporcion = Math.max(imagen.width, imagen.height) / Math.min(imagen.width, imagen.height);
+      if (esTarjeta && proporcion > 1.53 && proporcion < 1.64) return ENTERA; // ya es un escaneo o recorte de la tarjeta
+      const chica = escalar(imagen, 1000);
+      const { width: w, height: h } = chica;
+      const basura = [];
+      const mat = valor => (basura.push(valor), valor);
+      const mascara = mat(esTarjeta ? await siluetaTarjeta(chica) : siluetaHoja(chica));
+      const contornos = mat(new cv.MatVector());
       cv.morphologyEx(mascara, mascara, cv.MORPH_OPEN, mat(cv.Mat.ones(7, 7, cv.CV_8U)));
       cv.findContours(mascara, contornos, mat(new cv.Mat()), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
@@ -1137,8 +1530,8 @@
         puntos ??= cv.RotatedRect.points(cv.minAreaRect(casco)).map(({ x, y }) => [x, y]);
       }
       basura.forEach(valor => valor.delete());
-      // Sin un contorno claro, o un escaneo donde la tarjeta ocupa casi toda la imagen: se usa completa
-      return puntos ? puntos.map(([x, y]) => [x / w, y / h]) : [[0, 0], [1, 0], [1, 1], [0, 1]];
+      // null: sin un contorno claro, o un escaneo donde el documento ocupa casi toda la imagen
+      return puntos?.map(([x, y]) => [x / w, y / h]) ?? null;
     }
 
     // Sup-izq, sup-der, inf-der, inf-izq
@@ -1151,21 +1544,39 @@
       return [...ordenados.slice(inicio), ...ordenados.slice(0, inicio)];
     }
 
-    function enderezar(imagen, esquinas) {
+    function enderezar(imagen, esquinas, ancho = ANCHO, alto = ALTO) {
       let puntos = ordenar(esquinas.map(([x, y]) => [x * imagen.width, y * imagen.height]));
       const lado = (a, b) => Math.hypot(puntos[a][0] - puntos[b][0], puntos[a][1] - puntos[b][1]);
-      if (lado(1, 2) + lado(3, 0) > lado(0, 1) + lado(2, 3)) puntos = [...puntos.slice(1), puntos[0]]; // vertical: queda horizontal
+      if ((lado(1, 2) + lado(3, 0) > lado(0, 1) + lado(2, 3)) !== (alto > ancho)) puntos = [...puntos.slice(1), puntos[0]]; // la tarjeta queda horizontal y la hoja vertical
 
       const foto = cv.imread(imagen);
       const resultado = new cv.Mat();
       const desde = cv.matFromArray(4, 1, cv.CV_32FC2, puntos.flat());
-      const hacia = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, ANCHO, 0, ANCHO, ALTO, 0, ALTO]);
+      const hacia = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, ancho, 0, ancho, alto, 0, alto]);
       const matriz = cv.getPerspectiveTransform(desde, hacia);
-      cv.warpPerspective(foto, resultado, matriz, new cv.Size(ANCHO, ALTO), cv.INTER_LINEAR);
-      const tarjeta = nuevoLienzo(ANCHO, ALTO);
+      cv.warpPerspective(foto, resultado, matriz, new cv.Size(ancho, alto), cv.INTER_LINEAR);
+      const tarjeta = nuevoLienzo(ancho, alto);
       cv.imshow(tarjeta, resultado);
       [foto, resultado, desde, hacia, matriz].forEach(valor => valor.delete());
       return tarjeta;
+    }
+
+    // Aspecto de escáner: en grises, sin sombras y con el papel blanco.
+    // El fondo se estima borrando el texto (dilatar + mediana) y la foto se divide entre él.
+    function escanear(hoja) {
+      const imagen = cv.imread(hoja);
+      const fondo = new cv.Mat();
+      const nucleo = cv.Mat.ones(15, 15, cv.CV_8U);
+      cv.cvtColor(imagen, imagen, cv.COLOR_RGBA2GRAY);
+      cv.dilate(imagen, fondo, nucleo);
+      cv.medianBlur(fondo, fondo, 31);
+      cv.divide(imagen, fondo, imagen, 255);
+      cv.threshold(imagen, imagen, 230, 255, cv.THRESH_TRUNC); // lo casi blanco pasa a blanco al estirar
+      cv.normalize(imagen, imagen, 0, 255, cv.NORM_MINMAX);
+      const escaneo = nuevoLienzo(hoja.width, hoja.height);
+      cv.imshow(escaneo, imagen);
+      [imagen, fondo, nucleo].forEach(valor => valor.delete());
+      return escaneo;
     }
 
     async function ocr(lienzo, permitidos = '') {
@@ -1240,15 +1651,14 @@
     const nombreIne = document.getElementById('nombreIne');
     const avisoIne = document.getElementById('avisoIne');
     const generarPdf = document.getElementById('generarPdf');
-    const tipoAnexo = document.getElementById('tipoAnexo');
-    const cargaAnexo = document.getElementById('cargaAnexo');
-    const anexoIne = document.getElementById('anexoIne');
+    const opcionesAnexo = document.querySelectorAll('.opcion');
     const editor = document.getElementById('editor');
     const lienzo = editor.querySelector('.lienzo');
     let ladosIne = { frente: {}, reverso: {} };
     let colaIne = Promise.resolve();
+    let anexos = { acuse: {}, carta: {} }; // { archivo, foto } y, si es foto, { imagen, esquinas, cuartos, plano, escaneo }
     let nombreEditado = false;
-    let editando = '';
+    let alAplicar = null; // recibe las esquinas del editor
     let esquinasEditor = [];
     let arrastre = null;
 
@@ -1278,22 +1688,103 @@
       avisoIne.className = error ? 'error' : '';
     }
 
-    function anexoElegido() {
-      return tipoAnexo.querySelector('[aria-pressed="true"]').dataset.anexo;
+    function cajaAnexo(clave) {
+      return document.querySelector(`.anexo[data-anexo="${clave}"]`);
     }
 
-    function actualizarAnexo() {
-      const anexo = anexoElegido();
-      const archivo = anexoIne.files[0];
-      cargaAnexo.hidden = !anexo;
-      cargaAnexo.querySelector('.archivo').classList.toggle('listo', Boolean(archivo));
-      cargaAnexo.querySelector('.archivo span').textContent = archivo?.name ?? `Toca para subir el PDF de ${anexo}`;
-      generarPdf.disabled = !(ladosIne.frente.tarjeta && ladosIne.reverso.tarjeta) || (anexo && !archivo);
+    // Acuse y carta, en el orden en que van en el PDF
+    function anexosElegidos() {
+      return [...opcionesAnexo].filter(boton => boton.getAttribute('aria-pressed') === 'true').map(boton => boton.dataset.anexo);
+    }
+
+    function estadoLado({ archivo, tarjeta }) {
+      return tarjeta ? 'listo' : archivo ? 'procesando' : '';
+    }
+
+    function estadoAnexo({ archivo, foto, escaneo }) {
+      return foto && !escaneo ? 'procesando' : archivo ? 'listo' : '';
+    }
+
+    function actualizarResumen() {
+      const elegidos = anexosElegidos();
+      const lados = Object.values(ladosIne).map(estadoLado);
+      const partes = {
+        ine: lados.every(estado => estado === 'listo') ? 'listo' : lados.includes('procesando') ? 'procesando' : '',
+        acuse: estadoAnexo(anexos.acuse),
+        carta: estadoAnexo(anexos.carta),
+      };
+      for (const [clave, estado] of Object.entries(partes)) {
+        const fila = document.querySelector(`[data-parte="${clave}"]`);
+        const etiqueta = fila.querySelector('.estado');
+        fila.hidden = clave !== 'ine' && !elegidos.includes(clave);
+        if (clave !== 'ine') cajaAnexo(clave).hidden = fila.hidden;
+        etiqueta.className = `estado ${estado}`;
+        etiqueta.textContent = { listo: 'Listo', procesando: 'Procesando…', '': 'Falta' }[estado];
+      }
+      generarPdf.disabled = ['ine', ...elegidos].some(clave => partes[clave] !== 'listo');
     }
 
     function elegirAnexo(event) {
-      tipoAnexo.querySelectorAll('button').forEach(boton => boton.setAttribute('aria-pressed', boton === event.currentTarget));
-      actualizarAnexo();
+      const boton = event.currentTarget;
+      boton.setAttribute('aria-pressed', boton.getAttribute('aria-pressed') !== 'true');
+      actualizarResumen();
+    }
+
+    function mostrarAnexo(clave) {
+      const { archivo, foto, escaneo } = anexos[clave];
+      const caja = cajaAnexo(clave);
+      const recorte = caja.querySelector('.recorte');
+      const pdf = caja.querySelector('.pdf');
+      caja.classList.toggle('cargando', Boolean(foto && !escaneo));
+      caja.querySelector('.vacio').hidden = Boolean(archivo);
+      caja.querySelector('.herramientas').hidden = !escaneo;
+      pdf.hidden = !archivo || foto;
+      pdf.querySelector('span').textContent = archivo?.name ?? '';
+      recorte.hidden = !escaneo;
+      if (escaneo) recorte.src = escaneo.toDataURL('image/jpeg', .8);
+      else recorte.removeAttribute('src');
+    }
+
+    function procesarAnexo(clave, estado) {
+      colaIne = colaIne.then(async () => {
+        if (anexos[clave] !== estado) return;
+        let error = '';
+        let aviso = '';
+        try {
+          await prepararIne();
+          estado.imagen ??= await abrirImagen(estado.archivo);
+          if (!estado.esquinas) {
+            estado.esquinas = await detectar(estado.imagen, false) ?? ENTERA;
+            if (estado.esquinas === ENTERA) aviso = 'No encontré bien la orilla de la hoja: revisa el recorte con «Ajustar esquinas»';
+          }
+          estado.plano = escanear(enderezar(estado.imagen, estado.esquinas, HOJA_ANCHO, HOJA_ALTO));
+          estado.escaneo = girar(estado.plano, estado.cuartos);
+        } catch (falla) {
+          error = falla.message;
+        }
+        if (anexos[clave] !== estado) return;
+        if (error) {
+          anexos[clave] = {};
+          cajaAnexo(clave).querySelector('input').value = '';
+          avisarIne(error, true);
+        } else if (aviso) avisarIne(aviso);
+        mostrarAnexo(clave);
+        actualizarResumen();
+      });
+    }
+
+    // Un PDF se anexa tal cual; una foto se recorta y se deja como escaneo
+    function cambiarAnexo(event) {
+      const clave = event.target.closest('.anexo').dataset.anexo;
+      const archivo = event.target.files[0];
+      const foto = Boolean(archivo) && !/pdf$/i.test(archivo.type || archivo.name);
+      const pesada = foto && archivo.size > INE_MAX_BYTES;
+      const estado = anexos[clave] = archivo && !pesada ? { archivo, foto, cuartos: 0 } : {};
+      avisarIne(pesada ? 'La imagen pesa más de 15 MB' : '', true);
+      if (!estado.archivo) event.target.value = '';
+      mostrarAnexo(clave);
+      if (foto && !pesada) procesarAnexo(clave, estado);
+      actualizarResumen();
     }
 
     function mostrarLado(lado, estado) {
@@ -1318,7 +1809,7 @@
         try {
           await prepararIne();
           estado.imagen ??= await abrirImagen(estado.archivo);
-          estado.esquinas ??= await detectar(estado.imagen);
+          estado.esquinas ??= await detectar(estado.imagen) ?? ENTERA;
           Object.assign(estado, await orientar(enderezar(estado.imagen, estado.esquinas)));
         } catch (falla) {
           error = falla.message;
@@ -1347,7 +1838,7 @@
       const mrz = lados.find(lado => lado.mrz?.length)?.mrz ?? [];
       const texto = lados.find(lado => lado.texto)?.texto ?? '';
       if (!nombreEditado) nombreIne.value = conEnie(nombreMrz(mrz), texto) || nombreFrente(texto);
-      actualizarAnexo();
+      actualizarResumen();
     }
 
     function cambiarImagen(event) {
@@ -1361,15 +1852,23 @@
       revisarIne();
     }
 
+    function pdfDeHoja(escaneo) {
+      const pdf = new jspdf.jsPDF({ unit: 'in', format: 'letter', orientation: escaneo.width > escaneo.height ? 'landscape' : 'portrait' });
+      pdf.addImage(escaneo, 'JPEG', 0, 0, escaneo.width / 200, escaneo.height / 200); // a 200 dpi
+      return pdf.output('blob');
+    }
+
     async function descargarPdfIne() {
       const nombre = `${nombreIne.value.toUpperCase().replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'INE'}.pdf`;
       const pdf = new jspdf.jsPDF({ unit: 'in', format: 'letter' }); // carta a 200 dpi: frente en (208, 200) px y reverso en (208, 1150) px
       pdf.addImage(ladosIne.frente.tarjeta, 'JPEG', 208 / 200, 200 / 200, ANCHO / 200, ALTO / 200);
       pdf.addImage(ladosIne.reverso.tarjeta, 'JPEG', 208 / 200, 1150 / 200, ANCHO / 200, ALTO / 200);
       const ine = pdf.output('blob');
-      if (!anexoElegido()) return descargarArchivo(ine, nombre);
+      const elegidos = anexosElegidos();
+      if (!elegidos.length) return descargarArchivo(ine, nombre);
       try {
-        descargarArchivo(await juntarPdfs([ine, anexoIne.files[0]]), nombre);
+        const extras = elegidos.map(clave => anexos[clave].escaneo ? pdfDeHoja(anexos[clave].escaneo) : anexos[clave].archivo);
+        descargarArchivo(await juntarPdfs([ine, ...extras]), nombre);
         avisarIne('');
       } catch (error) {
         avisarIne(error.message, true);
@@ -1377,17 +1876,19 @@
     }
 
     function limpiarIne() {
-      Object.values(archivosIne).forEach(input => input.value = '');
+      document.querySelectorAll('#ine input[type="file"]').forEach(input => input.value = '');
       ladosIne = { frente: {}, reverso: {} };
       Object.keys(ladosIne).forEach(lado => {
         mostrarLado(lado, null);
         marcarCargando(lado, false);
       });
+      anexos = { acuse: {}, carta: {} };
+      Object.keys(anexos).forEach(mostrarAnexo);
+      opcionesAnexo.forEach(boton => boton.setAttribute('aria-pressed', false));
       nombreIne.value = '';
       nombreEditado = false;
-      anexoIne.value = '';
-      tipoAnexo.querySelector('button').click();
       avisarIne('');
+      actualizarResumen();
     }
 
     function dibujarEsquinas() {
@@ -1398,11 +1899,11 @@
       lienzo.querySelector('polygon').setAttribute('points', esquinasEditor.join(' '));
     }
 
-    async function abrirEditor(event) {
-      editando = event.target.closest('.lado').dataset.lado;
-      esquinasEditor = ladosIne[editando].esquinas.map(punto => [...punto]);
+    async function abrirEditor(original, esquinas, aplicar) {
+      alAplicar = aplicar;
+      esquinasEditor = esquinas.map(punto => [...punto]);
       const imagen = lienzo.querySelector('img');
-      imagen.src = escalar(ladosIne[editando].imagen, 1000).toDataURL('image/jpeg', .9);
+      imagen.src = escalar(original, 1000).toDataURL('image/jpeg', .9);
       await imagen.decode();
       lienzo.style.setProperty('--proporcion', imagen.naturalWidth / imagen.naturalHeight);
       dibujarEsquinas();
@@ -1424,16 +1925,57 @@
     }
 
     function aplicarEsquinas() {
-      const { archivo, imagen } = ladosIne[editando];
-      const estado = ladosIne[editando] = { archivo, imagen, esquinas: esquinasEditor };
       editor.close();
-      procesarLado(editando, estado);
-      revisarIne();
+      alAplicar(esquinasEditor);
+    }
+
+    function ajustarLado(event) {
+      const lado = event.target.closest('.lado').dataset.lado;
+      const { archivo, imagen, esquinas } = ladosIne[lado];
+      abrirEditor(imagen, esquinas, nuevas => {
+        const estado = ladosIne[lado] = { archivo, imagen, esquinas: nuevas };
+        procesarLado(lado, estado);
+        revisarIne();
+      });
+    }
+
+    function ajustarAnexo(event) {
+      const clave = event.target.closest('.anexo').dataset.anexo;
+      const { archivo, foto, imagen, esquinas, cuartos } = anexos[clave];
+      abrirEditor(imagen, esquinas, nuevas => {
+        const estado = anexos[clave] = { archivo, foto, imagen, esquinas: nuevas, cuartos };
+        mostrarAnexo(clave);
+        procesarAnexo(clave, estado);
+        actualizarResumen();
+      });
+    }
+
+    function girarAnexo(event) {
+      const clave = event.target.closest('.anexo').dataset.anexo;
+      const estado = anexos[clave];
+      estado.cuartos = (estado.cuartos + Number(event.currentTarget.dataset.giro) + 4) % 4;
+      estado.escaneo = girar(estado.plano, estado.cuartos);
+      mostrarAnexo(clave);
+    }
+
+    // En PC se puede soltar el archivo sobre el recuadro
+    function soltarArchivo(event) {
+      const zona = event.currentTarget;
+      event.preventDefault();
+      zona.classList.toggle('encima', event.type === 'dragover');
+      if (event.type !== 'drop' || !event.dataTransfer.files.length) return;
+      const input = zona.querySelector('input');
+      input.files = event.dataTransfer.files;
+      input.dispatchEvent(new Event('change'));
     }
 
     document.querySelector('[data-modo="ine"]').addEventListener('click', () => prepararIne().catch(() => {}));
     Object.values(archivosIne).forEach(input => input.addEventListener('change', cambiarImagen));
-    document.querySelectorAll('.ajustar').forEach(boton => boton.addEventListener('click', abrirEditor));
+    document.querySelectorAll('.lado .ajustar').forEach(boton => boton.addEventListener('click', ajustarLado));
+    document.querySelectorAll('.anexo .ajustar').forEach(boton => boton.addEventListener('click', ajustarAnexo));
+    document.querySelectorAll('.anexo .girar').forEach(boton => boton.addEventListener('click', girarAnexo));
+    document.querySelectorAll('.anexo input').forEach(input => input.addEventListener('change', cambiarAnexo));
+    document.querySelectorAll('#ine .carga').forEach(zona => ['dragover', 'dragleave', 'drop'].forEach(tipo => zona.addEventListener(tipo, soltarArchivo)));
     nombreIne.addEventListener('input', () => nombreEditado = nombreIne.value !== '');
     generarPdf.addEventListener('click', descargarPdfIne);
     document.getElementById('limpiarIne').addEventListener('click', limpiarIne);
@@ -1441,8 +1983,8 @@
     lienzo.addEventListener('pointermove', moverEsquina);
     document.getElementById('aplicarEsquinas').addEventListener('click', aplicarEsquinas);
     document.getElementById('cancelarEsquinas').addEventListener('click', () => editor.close());
-    tipoAnexo.querySelectorAll('button').forEach(boton => boton.addEventListener('click', elegirAnexo));
-    anexoIne.addEventListener('change', actualizarAnexo);
+    opcionesAnexo.forEach(boton => boton.addEventListener('click', elegirAnexo));
+    actualizarResumen();
 
     const pdfsUnir = document.getElementById('pdfsUnir');
     const listaUnir = document.getElementById('listaUnir');
@@ -1502,6 +2044,135 @@
     listaUnir.addEventListener('click', ordenarPdfs);
     unirPdf.addEventListener('click', unirPdfs);
     document.getElementById('limpiarUnir').addEventListener('click', limpiarUnir);
+  </script>
+  <script>
+    // Fondo arcade: campo de estrellas, formación de enemigos que se lanzan en picada y una nave que dispara
+    (() => {
+      const lienzo = document.getElementById('espacio');
+      const ctx = lienzo.getContext('2d');
+      const sprites = {
+        manta: { color: '#c084fc', filas: ['X....X....X', 'XX..XXX..XX', 'XXXXXXXXXXX', '.XXX.X.XXX.', '..XXXXXXX..', '...X...X...'] },
+        dron: { color: '#f472b6', filas: ['....XXX....', '..XXXXXXX..', '.XX.XXX.XX.', 'XXXXXXXXXXX', '..X.XXX.X..', '.X.......X.'] },
+        nave: { color: '#a5f3fc', filas: ['.....X.....', '.....X.....', '....XXX....', '..X.XXX.X..', '.XXXXXXXXX.', 'XXX.XXX.XXX', 'X....X....X'] }
+      };
+      const nave = { x: 0, destino: 0, recarga: 0 };
+      let ancho, alto, px, estrellas, enemigos, disparos, chispas, previo = 0;
+
+      function sprite(nombre, x, y, alfa = 1) {
+        const { color, filas } = sprites[nombre];
+        ctx.globalAlpha = alfa;
+        ctx.fillStyle = color;
+        filas.forEach((fila, j) => [...fila].forEach((c, i) => {
+          if (c === 'X') ctx.fillRect(Math.round(x + (i - fila.length / 2) * px), Math.round(y + (j - filas.length / 2) * px), px, px);
+        }));
+        ctx.globalAlpha = 1;
+      }
+
+      function preparar() {
+        const dpr = devicePixelRatio || 1;
+        ancho = innerWidth;
+        alto = innerHeight;
+        lienzo.width = ancho * dpr;
+        lienzo.height = alto * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        px = ancho < 640 ? 2 : 3;
+        estrellas = Array.from({ length: Math.round(ancho * alto / 6000) }, () => ({
+          x: Math.random() * ancho, y: Math.random() * alto, v: .2 + Math.random() * 1.3, fase: Math.random() * 6
+        }));
+        const columnas = ancho < 640 ? 5 : 10;
+        enemigos = [];
+        for (let fila = 0; fila < 3; fila++) {
+          for (let c = 0; c < columnas; c++) {
+            enemigos.push({ tipo: fila ? 'manta' : 'dron', bx: (c - (columnas - 1) / 2) * px * 17, by: 60 + fila * px * 14, picada: 0, fuera: 0, alfa: 1 });
+          }
+        }
+        disparos = [];
+        chispas = [];
+        nave.x = nave.destino = ancho / 2;
+      }
+
+      function cuadro(t) {
+        const dt = Math.min(t - previo, 50);
+        previo = t;
+        ctx.clearRect(0, 0, ancho, alto);
+
+        for (const e of estrellas) {
+          e.y += e.v * dt * .05;
+          if (e.y > alto) { e.y = 0; e.x = Math.random() * ancho; }
+          ctx.globalAlpha = .45 + .35 * Math.sin(t / 500 + e.fase);
+          ctx.fillStyle = e.v > 1.1 ? '#f5f3ff' : '#a78bfa';
+          ctx.fillRect(e.x, e.y, e.v > 1.1 ? 2 : 1, e.v > 1.1 ? 2 : 1);
+        }
+        ctx.globalAlpha = 1;
+
+        // De vez en cuando un enemigo se lanza en picada y regresa a la formación
+        if (Math.random() < dt / 1800) {
+          const libres = enemigos.filter(e => !e.picada && e.fuera <= 0);
+          if (libres.length) libres[Math.floor(Math.random() * libres.length)].picada = 1;
+        }
+        for (const e of enemigos) {
+          if (e.fuera > 0) { e.fuera -= dt; continue; }
+          e.alfa = Math.min(1, e.alfa + dt / 600);
+          e.picada = Math.max(0, e.picada - dt / 4500);
+          const avance = 1 - e.picada;
+          e.x = ancho / 2 + e.bx + Math.sin(t / 1600) * 50 + (e.picada && Math.sin(avance * Math.PI * 2) * 160);
+          e.y = e.by + Math.sin(t / 600 + e.bx) * 3 + (e.picada && Math.sin(avance * Math.PI) * alto * .7);
+          sprite(e.tipo, e.x, e.y, e.alfa);
+        }
+
+        // La nave patrulla abajo y dispara
+        if (Math.abs(nave.destino - nave.x) < 4) nave.destino = ancho * (.1 + Math.random() * .8);
+        nave.x += Math.sign(nave.destino - nave.x) * Math.min(Math.abs(nave.destino - nave.x), dt * .15);
+        const naveY = alto - 40;
+        nave.recarga -= dt;
+        if (nave.recarga <= 0) {
+          disparos.push({ x: nave.x, y: naveY - px * 5 });
+          nave.recarga = 500 + Math.random() * 700;
+        }
+        sprite('nave', nave.x, naveY);
+
+        ctx.fillStyle = '#fde68a';
+        disparos = disparos.filter(d => {
+          d.y -= dt * .45;
+          const blanco = enemigos.find(e => e.fuera <= 0 && e.alfa > .8 && Math.abs(e.x - d.x) < px * 6 && Math.abs(e.y - d.y) < px * 4);
+          if (blanco) {
+            blanco.fuera = 2500 + Math.random() * 3000;
+            blanco.alfa = 0;
+            blanco.picada = 0;
+            for (let i = 0; i < 14; i++) {
+              const angulo = Math.random() * Math.PI * 2, rapidez = .05 + Math.random() * .15;
+              chispas.push({ x: d.x, y: d.y, vx: Math.cos(angulo) * rapidez, vy: Math.sin(angulo) * rapidez, vida: 1, color: sprites[blanco.tipo].color });
+            }
+            return false;
+          }
+          ctx.fillRect(d.x - 1, d.y, 2, px * 3);
+          return d.y > -10;
+        });
+
+        chispas = chispas.filter(c => {
+          c.x += c.vx * dt;
+          c.y += c.vy * dt;
+          c.vida -= dt / 700;
+          ctx.globalAlpha = Math.max(0, c.vida);
+          ctx.fillStyle = c.color;
+          ctx.fillRect(c.x, c.y, px, px);
+          return c.vida > 0;
+        });
+        ctx.globalAlpha = 1;
+
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) requestAnimationFrame(cuadro);
+      }
+
+      // En móvil la barra del navegador cambia el alto al hacer scroll: solo reiniciamos si cambia el ancho
+      addEventListener('resize', () => {
+        if (innerWidth !== ancho) return preparar();
+        alto = innerHeight;
+        lienzo.height = alto * (devicePixelRatio || 1);
+        ctx.setTransform(devicePixelRatio || 1, 0, 0, devicePixelRatio || 1, 0, 0);
+      });
+      preparar();
+      requestAnimationFrame(cuadro);
+    })();
   </script>
 </body>
 </html>
