@@ -1569,6 +1569,19 @@
       return tarjeta;
     }
 
+    // La INE tiene esquinas curvas (3.18 mm); lo que queda fuera de ellas es fondo de la foto y se pinta de blanco
+    function redondear(tarjeta) {
+      const lienzo = nuevoLienzo(tarjeta.width, tarjeta.height);
+      const pincel = lienzo.getContext('2d');
+      pincel.fillStyle = '#fff';
+      pincel.fillRect(0, 0, lienzo.width, lienzo.height);
+      pincel.beginPath();
+      pincel.roundRect(0, 0, lienzo.width, lienzo.height, tarjeta.width * 3.18 / 85.6);
+      pincel.clip();
+      pincel.drawImage(tarjeta, 0, 0);
+      return lienzo;
+    }
+
     // Aspecto de escáner: en grises, sin sombras y con el papel blanco.
     // El fondo se estima borrando el texto (dilatar + mediana) y la foto se divide entre él.
     function escanear(hoja) {
@@ -1823,7 +1836,7 @@
           await prepararIne();
           estado.imagen ??= await abrirImagen(estado.archivo);
           estado.esquinas ??= await detectar(estado.imagen) ?? ENTERA;
-          Object.assign(estado, await orientar(enderezar(estado.imagen, estado.esquinas)));
+          Object.assign(estado, await orientar(redondear(enderezar(estado.imagen, estado.esquinas))));
         } catch (falla) {
           error = falla.message;
         }
