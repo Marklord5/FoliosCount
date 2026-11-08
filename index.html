@@ -1489,32 +1489,66 @@
       return mascara;
     }
 
-    // La hoja es lo claro y sin color (brillo − 2 × saturación): así la mesa, aunque sea clara, queda fuera
-    function siluetaHoja(chica) {
-      const mascara = cv.imread(chica);
+    // Qué tan "hoja" es cada píxel: claro y sin color (brillo − 2 × saturación); así la mesa, aunque sea clara, queda fuera
+    function claridad(chica) {
+      const imagen = cv.imread(chica);
       const canales = new cv.MatVector();
-      const nucleo = cv.Mat.ones(25, 25, cv.CV_8U);
-      cv.cvtColor(mascara, mascara, cv.COLOR_RGBA2RGB);
-      cv.cvtColor(mascara, mascara, cv.COLOR_RGB2HSV);
-      cv.split(mascara, canales);
+      cv.cvtColor(imagen, imagen, cv.COLOR_RGBA2RGB);
+      cv.cvtColor(imagen, imagen, cv.COLOR_RGB2HSV);
+      cv.split(imagen, canales);
       const [saturacion, brillo] = [canales.get(1), canales.get(2)];
-      cv.addWeighted(brillo, 1, saturacion, -2, 0, mascara);
-      cv.threshold(mascara, mascara, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+      cv.addWeighted(brillo, 1, saturacion, -2, 0, brillo);
+      [imagen, canales, saturacion].forEach(valor => valor.delete());
+      return brillo;
+    }
+
+    // estricta: un segundo corte solo entre lo claro, por si un reflejo de luz en la mesa se pega a la hoja
+    function siluetaHoja(claro, estricta = false) {
+      const mascara = new cv.Mat();
+      const nucleo = cv.Mat.ones(25, 25, cv.CV_8U);
+      const corte = cv.threshold(claro, mascara, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+      if (estricta) {
+        const claros = claro.data.filter(valor => valor > corte);
+        const fila = cv.matFromArray(1, claros.length, cv.CV_8U, claros);
+        const motas = cv.Mat.ones(9, 9, cv.CV_8U);
+        cv.threshold(claro, mascara, cv.threshold(fila, fila, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU), 255, cv.THRESH_BINARY);
+        cv.morphologyEx(mascara, mascara, cv.MORPH_OPEN, motas); // el reflejo queda moteado: se borra
+        [fila, motas].forEach(valor => valor.delete());
+      }
       cv.morphologyEx(mascara, mascara, cv.MORPH_CLOSE, nucleo); // tapa el texto
-      [canales, saturacion, brillo, nucleo].forEach(valor => valor.delete());
+      nucleo.delete();
       return mascara;
     }
 
-    // Esquinas de la tarjeta (o la hoja) en fracciones del ancho y alto de la imagen.
-    // Se detecta sobre la foto reducida a 1000 px; el recorte final se hace sobre la original.
-    async function detectar(imagen, esTarjeta = true) {
-      const proporcion = Math.max(imagen.width, imagen.height) / Math.min(imagen.width, imagen.height);
-      if (esTarjeta && proporcion > 1.53 && proporcion < 1.64) return ENTERA; // ya es un escaneo o recorte de la tarjeta
-      const chica = escalar(imagen, 1000);
-      const { width: w, height: h } = chica;
+    // Qué tan marcada es la orilla a lo largo de los 4 lados: claridad justo adentro menos justo afuera.
+    // En la orilla real de la hoja hay un salto; si el lado cruza una sombra o un reflejo, casi no.
+    function contraste(claro, puntos) {
+      const { cols: w, rows: h, data } = claro;
+      const [cx, cy] = [0, 1].map(eje => puntos.reduce((suma, punto) => suma + punto[eje], 0) / 4);
+      const valor = (x, y) => x >= 0 && y >= 0 && x < w && y < h ? data[Math.round(y) * w + Math.round(x)] : null;
+      let suma = 0;
+      let cuenta = 0;
+      puntos.forEach(([x0, y0], i) => {
+        const [x1, y1] = puntos[(i + 1) % 4];
+        const largo = Math.hypot(x1 - x0, y1 - y0) || 1;
+        let [nx, ny] = [(y0 - y1) / largo, (x1 - x0) / largo];
+        if (nx * (cx - x0) + ny * (cy - y0) < 0) [nx, ny] = [-nx, -ny]; // hacia adentro
+        for (let t = .1; t < .95; t += .05) {
+          const [px, py] = [x0 + (x1 - x0) * t, y0 + (y1 - y0) * t];
+          const [adentro, afuera] = [valor(px + nx * 8, py + ny * 8), valor(px - nx * 8, py - ny * 8)];
+          if (adentro === null || afuera === null) continue; // lado pegado a la orilla de la foto
+          suma += adentro - afuera;
+          cuenta++;
+        }
+      });
+      return cuenta ? suma / cuenta : 0;
+    }
+
+    // El contorno más grande de la máscara reducido a 4 esquinas, en px
+    function cuadrilatero(mascara) {
+      const { cols: w, rows: h } = mascara;
       const basura = [];
       const mat = valor => (basura.push(valor), valor);
-      const mascara = mat(esTarjeta ? await siluetaTarjeta(chica) : siluetaHoja(chica));
       const contornos = mat(new cv.MatVector());
       cv.morphologyEx(mascara, mascara, cv.MORPH_OPEN, mat(cv.Mat.ones(7, 7, cv.CV_8U)));
       cv.findContours(mascara, contornos, mat(new cv.Mat()), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
@@ -1539,8 +1573,35 @@
         puntos ??= cv.RotatedRect.points(cv.minAreaRect(casco)).map(({ x, y }) => [x, y]);
       }
       basura.forEach(valor => valor.delete());
+      return puntos;
+    }
+
+    // Esquinas de la tarjeta (o la hoja) en fracciones del ancho y alto de la imagen.
+    // Se detecta sobre la foto reducida a 1000 px; el recorte final se hace sobre la original.
+    async function detectar(imagen, esTarjeta = true) {
+      const proporcion = Math.max(imagen.width, imagen.height) / Math.min(imagen.width, imagen.height);
+      if (esTarjeta && proporcion > 1.53 && proporcion < 1.64) return ENTERA; // ya es un escaneo o recorte de la tarjeta
+      const chica = escalar(imagen, 1000);
+      let puntos;
+      if (esTarjeta) {
+        const mascara = await siluetaTarjeta(chica);
+        puntos = cuadrilatero(mascara);
+        mascara.delete();
+      } else {
+        // Hoja: dos cortes (normal y estricto) y gana el que tiene las orillas más marcadas
+        const claro = claridad(chica);
+        let mejor = -Infinity;
+        for (const estricta of [false, true]) {
+          const mascara = siluetaHoja(claro, estricta);
+          const opcion = cuadrilatero(mascara);
+          const nota = opcion ? contraste(claro, opcion) : -Infinity;
+          if (nota > mejor) [puntos, mejor] = [opcion, nota];
+          mascara.delete();
+        }
+        claro.delete();
+      }
       // null: sin un contorno claro, o un escaneo donde el documento ocupa casi toda la imagen
-      return puntos?.map(([x, y]) => [x / w, y / h]) ?? null;
+      return puntos?.map(([x, y]) => [x / chica.width, y / chica.height]) ?? null;
     }
 
     // Sup-izq, sup-der, inf-der, inf-izq
