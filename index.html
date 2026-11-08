@@ -475,6 +475,7 @@
       user-select: none;
       cursor: crosshair;
     }
+    .lienzo::before { content: ''; position: absolute; inset: -20px; } /* los puntos en la orilla de la foto se pueden tomar también por fuera */
     .lienzo img { display: block; width: 100%; border-radius: 6px; pointer-events: none; }
     .lienzo svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
     .lienzo polygon { fill: rgba(167, 139, 250, .18); stroke: var(--acento); stroke-width: 2; vector-effect: non-scaling-stroke; }
@@ -744,7 +745,7 @@
 
           <section class="panel" aria-labelledby="tituloAnexos">
             <h2 id="tituloAnexos"><span class="paso">2</span>Documentos adicionales</h2>
-            <p class="nota">Elige qué más lleva el PDF. Si subes una foto, se recorta y queda como escaneada.</p>
+            <p class="nota">Elige qué más lleva el PDF. Si subes una foto, se recorta y queda como escaneada; el acuse en Excel se convierte a PDF.</p>
             <div class="opciones" role="group" aria-labelledby="tituloAnexos">
               <button type="button" class="opcion" data-anexo="acuse" aria-pressed="false"><svg class="marca" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>Acuse</button>
               <button type="button" class="opcion" data-anexo="carta" aria-pressed="false"><svg class="marca" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>Carta responsiva</button>
@@ -753,12 +754,12 @@
               <div class="anexo" data-anexo="acuse" hidden>
                 <label class="carga">
                   Acuse
-                  <input type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
+                  <input type="file" accept="application/pdf,.pdf,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
                   <span class="tarjeta hoja">
                     <img class="recorte" alt="Acuse escaneado" hidden>
                     <span class="vacio">
                       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
-                      PDF o foto
+                      PDF, Excel o foto
                     </span>
                     <span class="pdf" hidden><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></svg><span></span></span>
                     <span class="procesando"><span class="giro"></span>Escaneando…</span>
@@ -1800,13 +1801,22 @@
     }
 
     // Un PDF se anexa tal cual; una foto se recorta y se deja como escaneo
-    function cambiarAnexo(event) {
+    async function cambiarAnexo(event) {
       const clave = event.target.closest('.anexo').dataset.anexo;
-      const archivo = event.target.files[0];
+      let archivo = event.target.files[0];
+      let error = '';
+      if (/\.xlsx$/i.test(archivo?.name)) {
+        try {
+          archivo = await excelAPdf(archivo); // queda como cualquier PDF subido
+        } catch {
+          archivo = null;
+          error = 'No se pudo convertir el Excel a PDF';
+        }
+      }
       const foto = Boolean(archivo) && !/pdf$/i.test(archivo.type || archivo.name);
       const pesada = foto && archivo.size > INE_MAX_BYTES;
       const estado = anexos[clave] = archivo && !pesada ? { archivo, foto, cuartos: 0 } : {};
-      avisarIne(pesada ? 'La imagen pesa más de 15 MB' : '', true);
+      avisarIne(error || (pesada ? 'La imagen pesa más de 15 MB' : ''), true);
       if (!estado.archivo) event.target.value = '';
       mostrarAnexo(clave);
       if (foto && !pesada) procesarAnexo(clave, estado);
@@ -1882,6 +1892,102 @@
       const pdf = new jspdf.jsPDF({ unit: 'in', format: 'letter', orientation: escaneo.width > escaneo.height ? 'landscape' : 'portrait' });
       pdf.addImage(escaneo, 'JPEG', 0, 0, escaneo.width / 200, escaneo.height / 200); // a 200 dpi
       return pdf.output('blob');
+    }
+
+    // Dibuja la primera hoja visible del Excel en un PDF carta, ajustada al ancho como al imprimir
+    async function excelAPdf(archivo) {
+      const libro = new ExcelJS.Workbook();
+      await libro.xlsx.load(await archivo.arrayBuffer());
+      const hoja = libro.worksheets.find(h => h.state === 'visible') ?? libro.worksheets[0];
+      const { orientation, margins, fitToPage, fitToHeight } = hoja.pageSetup;
+      const pdf = new jspdf.jsPDF({ unit: 'pt', format: 'letter', orientation: orientation === 'landscape' ? 'landscape' : 'portrait' });
+      const m = { left: .7, right: .7, top: .75, bottom: .75, ...margins }; // pulgadas
+      const anchoUtil = pdf.internal.pageSize.getWidth() - (m.left + m.right) * 72;
+      const altoUtil = pdf.internal.pageSize.getHeight() - (m.top + m.bottom) * 72;
+
+      // Medidas en puntos: el ancho de Excel va en caracteres (7 px + 5 de margen) y el alto en puntos
+      const anchoCol = c => { const col = hoja.getColumn(c); return col.hidden ? 0 : ((col.width ?? hoja.properties.defaultColWidth ?? 8.43) * 7 + 5) * .75; };
+      const altoRen = r => { const ren = hoja.getRow(r); return ren.hidden ? 0 : ren.height ?? hoja.properties.defaultRowHeight ?? 15; };
+      const suma = (medida, hasta) => { let total = 0; for (let i = 1; i < hasta; i++) total += medida(i); return total; };
+      const x = c => suma(anchoCol, c);
+      const y = r => suma(altoRen, r);
+
+      const imagenes = hoja.getImages().map(({ imageId, range: { tl, br, ext } }) => {
+        const punto = a => [x(a.nativeCol + 1) + a.nativeColOff / 12700, y(a.nativeRow + 1) + a.nativeRowOff / 12700]; // EMU → pt
+        const [x0, y0] = punto(tl);
+        const [x1, y1] = ext ? [x0 + ext.width * .75, y0 + ext.height * .75] : punto(br);
+        return { imagen: libro.getImage(Number(imageId)), r: tl.nativeRow + 1, x0, y0, x1, y1 };
+      });
+      const ultRen = Math.max(hoja.rowCount, ...imagenes.map(i => i.r));
+      const ultCol = hoja.columnCount;
+      let escala = Math.min(1, anchoUtil / Math.max(x(ultCol + 1), ...imagenes.map(i => i.x1)));
+      if (fitToPage && fitToHeight !== 0) escala = Math.min(escala, altoUtil / Math.max(y(ultRen + 1), ...imagenes.map(i => i.y1)));
+
+      const paginas = [1]; // primer renglón de cada página
+      for (let r = 1; r <= ultRen; r++) if ((y(r + 1) - y(paginas.at(-1))) * escala > altoUtil && r > paginas.at(-1)) paginas.push(r);
+      paginas.slice(1).forEach(() => pdf.addPage());
+      const enPagina = (r, xs, ys) => { // de coordenadas de la hoja a la página donde cae el renglón
+        const i = paginas.findLastIndex(inicio => inicio <= r);
+        pdf.setPage(i + 1);
+        return [m.left * 72 + xs * escala, m.top * 72 + (ys - y(paginas[i])) * escala];
+      };
+
+      const regiones = {}; // celdas combinadas, por la celda principal
+      (hoja.model.merges ?? []).forEach(rango => {
+        const [a, b] = rango.split(':').map(direccion => hoja.getCell(direccion));
+        regiones[a.address] = { c1: a.col, r1: a.row, c2: b.col, r2: b.row };
+      });
+      const celdas = [];
+      for (let r = 1; r <= ultRen; r++) for (let c = 1; c <= ultCol; c++) {
+        if (!anchoCol(c) || !altoRen(r)) continue;
+        const celda = hoja.getCell(r, c);
+        const zona = regiones[celda.master.address] ?? { c1: c, r1: r, c2: c, r2: r };
+        const [x0, y0] = enPagina(zona.r1, x(zona.c1), y(zona.r1));
+        const [x1, y1] = enPagina(zona.r1, x(zona.c2 + 1), y(zona.r2 + 1));
+        celdas.push({ celda, r, c, zona, x0, y0, x1, y1, principal: celda.master === celda });
+      }
+      const color = (argb, porDefecto) => argb ? `#${argb.slice(-6)}` : porDefecto;
+
+      // Primero rellenos, luego bordes encima y al final el texto
+      for (const { celda, r, x0, y0, x1, y1, principal } of celdas) {
+        const { type, pattern, fgColor } = celda.fill ?? {};
+        if (!principal || type !== 'pattern' || pattern !== 'solid' || !fgColor?.argb) continue;
+        enPagina(r, 0, 0);
+        pdf.setFillColor(color(fgColor.argb)).rect(x0, y0, x1 - x0, y1 - y0, 'F');
+      }
+      const grosor = { thin: .5, hair: .25, medium: 1, thick: 1.5, double: 1.5 };
+      for (const { celda, r, c, zona } of celdas) {
+        const [cx0, cy0] = enPagina(r, x(c), y(r));
+        const [cx1, cy1] = enPagina(r, x(c + 1), y(r + 1));
+        const lados = { top: [r === zona.r1, cx0, cy0, cx1, cy0], bottom: [r === zona.r2, cx0, cy1, cx1, cy1], left: [c === zona.c1, cx0, cy0, cx0, cy1], right: [c === zona.c2, cx1, cy0, cx1, cy1] };
+        for (const [lado, [orilla, ...linea]] of Object.entries(lados)) {
+          const borde = celda.border?.[lado];
+          if (!orilla || !borde?.style) continue;
+          pdf.setLineWidth((grosor[borde.style] ?? .5) * escala).setDrawColor(color(borde.color?.argb, '#000000')).line(...linea);
+        }
+      }
+      for (const { celda, r, x0, y0, x1, y1, principal } of celdas) {
+        const texto = celda.value instanceof Date ? celda.value.toLocaleDateString('es-MX') : celda.text;
+        if (!principal || !texto) continue;
+        const { size = 11, bold, italic, color: tinta } = celda.font ?? {};
+        const { horizontal, vertical = 'bottom', wrapText } = celda.alignment ?? {};
+        const numero = typeof (celda.result ?? celda.value) === 'number';
+        const alinear = { center: 'center', centerContinuous: 'center', right: 'right' }[horizontal ?? (numero ? 'right' : 'left')] ?? 'left';
+        const margen = 2 * escala;
+        enPagina(r, 0, 0);
+        pdf.setFont('helvetica', bold && italic ? 'bolditalic' : bold ? 'bold' : italic ? 'italic' : 'normal').setFontSize(size * escala).setTextColor(color(tinta?.argb, '#000000'));
+        const lineas = wrapText ? pdf.splitTextToSize(texto, x1 - x0 - 2 * margen) : texto.split('\n');
+        const alto = lineas.length * size * escala * 1.15;
+        const ty = vertical === 'top' ? y0 + margen : vertical === 'middle' || vertical === 'center' ? (y0 + y1 - alto) / 2 : y1 - margen - alto;
+        const tx = alinear === 'center' ? (x0 + x1) / 2 : alinear === 'right' ? x1 - margen : x0 + margen;
+        pdf.text(lineas, tx, ty, { align: alinear, baseline: 'top', lineHeightFactor: 1.15 });
+      }
+      for (const { imagen, r, x0, y0, x1, y1 } of imagenes) {
+        const [px, py] = enPagina(r, x0, y0);
+        const datos = imagen.buffer ? new Uint8Array(imagen.buffer) : imagen.base64.replace(/^data:[^,]*,/, '');
+        pdf.addImage(datos, imagen.extension.toUpperCase(), px, py, (x1 - x0) * escala, (y1 - y0) * escala);
+      }
+      return new File([pdf.output('blob')], archivo.name.replace(/\.xlsx$/i, '.pdf'), { type: 'application/pdf' });
     }
 
     async function descargarPdfIne() {
