@@ -329,7 +329,7 @@ tfoot td { border: 0; font-size: 1.1rem; font-weight: 700; color: var(--acento);
 .girar { display: grid; place-items: center; min-height: 40px; border-color: var(--borde-fuerte); }
 .pdf { display: grid; justify-items: center; gap: 8px; padding: 12px; font-size: .8rem; color: var(--texto); overflow-wrap: anywhere; text-align: center; }
 .pdf svg { color: var(--acento); }
-.carga.encima .tarjeta { color: var(--acento-claro); background: var(--acento-suave); border-color: var(--acento); }
+.carga.encima :is(.tarjeta, .archivo) { color: var(--acento-claro); background: var(--acento-suave); border-color: var(--acento); }
 
 .ine, .ine-docs { display: grid; gap: 24px; }
 .panel h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-size: 1rem; }
@@ -347,24 +347,17 @@ tfoot td { border: 0; font-size: 1.1rem; font-weight: 700; color: var(--acento);
 }
 .nota { margin: -6px 0 12px; font-size: .85rem; line-height: 1.4; color: var(--texto-2); }
 .lados { display: grid; gap: 16px; }
-.opciones { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-.opcion {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 16px 0 10px;
-  font-size: .9rem;
-  background: var(--campo);
-  border-color: var(--borde-fuerte);
-  border-radius: 999px;
-}
-.opcion[aria-pressed="true"] { color: var(--texto); background: var(--acento-suave); border-color: var(--acento); }
-.opcion .marca path { opacity: 0; transition: opacity .2s; }
-.opcion[aria-pressed="true"] .marca { color: var(--acento); }
-.opcion[aria-pressed="true"] .marca path { opacity: 1; }
-.anexos { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 16px; }
-.anexos:not(:has(.anexo:not([hidden]))) { display: none; }
+/* Documentos adicionales: zonas para agregar y una tarjeta por documento */
+.agregar-anexos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; }
+.archivo strong { display: block; font-weight: 500; color: var(--texto); }
+.anexos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px 12px; margin-top: 16px; }
+.anexos:empty { display: none; }
+.anexo-titulo { display: flex; align-items: center; min-height: 44px; font-size: .85rem; font-weight: 500; color: var(--texto-2); }
+.anexo-titulo span { flex: 1; overflow-wrap: anywhere; }
+.anexo-titulo .quitar { width: 44px; height: 44px; margin-right: -10px; }
+.anexo .tarjeta { margin-top: 0; }
+.falla { display: grid; justify-items: center; gap: 8px; padding: 12px; font-size: .8rem; color: var(--peligro); overflow-wrap: anywhere; text-align: center; }
+.tarjeta:has(.falla:not([hidden])) { background: var(--peligro-fondo); border: 1px solid var(--peligro-borde); }
 .contenido { margin: 4px 0 12px; padding: 0; list-style: none; counter-reset: parte; }
 .contenido li {
   display: flex;
@@ -379,6 +372,7 @@ tfoot td { border: 0; font-size: 1.1rem; font-weight: 700; color: var(--acento);
 .estado { margin-left: auto; font-size: .8rem; color: var(--texto-3); white-space: nowrap; }
 .estado.listo { color: var(--exito); }
 .estado.procesando { color: var(--acento-claro); }
+.estado.error { color: var(--peligro); }
 
 main:has(#ine:not([hidden])) { max-width: 1080px; }
 @media (min-width: 640px) {

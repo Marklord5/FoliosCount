@@ -363,12 +363,14 @@ const archivosIne = { frente: document.getElementById('ineFrente'), reverso: doc
 const nombreIne = document.getElementById('nombreIne');
 const avisoIne = document.getElementById('avisoIne');
 const generarPdf = document.getElementById('generarPdf');
-const opcionesAnexo = document.querySelectorAll('.opcion');
+const listaAnexos = document.getElementById('anexos');
+const filaIne = document.getElementById('parteIne');
+const NOMBRES = { acuse: 'Acuse', carta: 'Carta responsiva' };
 const editor = document.getElementById('editor');
 const lienzo = editor.querySelector('.lienzo');
 let ladosIne = { frente: {}, reverso: {} };
 let colaIne = Promise.resolve();
-let anexos = { acuse: {}, carta: {} }; // { archivo, foto } y, si es foto, { imagen, esquinas, cuartos, plano, escaneo }
+const anexos = new Map(); // tarjeta → { archivo, foto, error } y, si es foto, { imagen, esquinas, cuartos, plano, escaneo }
 let nombreEditado = false;
 let alAplicar = null; // recibe las esquinas del editor
 let esquinasEditor = [];
@@ -379,74 +381,68 @@ function avisarIne(texto, error = false) {
   avisoIne.className = error ? 'error' : '';
 }
 
-function cajaAnexo(clave) {
-  return document.querySelector(`.anexo[data-anexo="${clave}"]`);
-}
-
-// Acuse y carta, en el orden en que van en el PDF
-function anexosElegidos() {
-  return [...opcionesAnexo].filter(boton => boton.getAttribute('aria-pressed') === 'true').map(boton => boton.dataset.anexo);
+function nombreAnexo(caja) {
+  return caja.querySelector('.anexo-titulo span').textContent;
 }
 
 function estadoLado({ archivo, tarjeta }) {
   return tarjeta ? 'listo' : archivo ? 'procesando' : '';
 }
 
-function estadoAnexo({ archivo, foto, escaneo }) {
-  return foto && !escaneo ? 'procesando' : archivo ? 'listo' : '';
+function estadoAnexo({ foto, escaneo, error }) {
+  return error ? 'error' : foto && !escaneo ? 'procesando' : 'listo';
 }
 
+// Nombre y estado de cada parte, en el orden en que van en el PDF: INE, acuses y cartas.
+// Se numeran solo si hay más de uno del mismo tipo.
 function actualizarResumen() {
-  const elegidos = anexosElegidos();
   const lados = Object.values(ladosIne).map(estadoLado);
-  const partes = {
-    ine: lados.every(estado => estado === 'listo') ? 'listo' : lados.includes('procesando') ? 'procesando' : '',
-    acuse: estadoAnexo(anexos.acuse),
-    carta: estadoAnexo(anexos.carta),
-  };
-  for (const [clave, estado] of Object.entries(partes)) {
-    const fila = document.querySelector(`[data-parte="${clave}"]`);
-    const etiqueta = fila.querySelector('.estado');
-    fila.hidden = clave !== 'ine' && !elegidos.includes(clave);
-    if (clave !== 'ine') cajaAnexo(clave).hidden = fila.hidden;
-    etiqueta.className = `estado ${estado}`;
-    etiqueta.textContent = { listo: 'Listo', procesando: 'Procesando…', '': 'Falta' }[estado];
+  const partes = [[filaIne, lados.every(estado => estado === 'listo') ? 'listo' : lados.includes('procesando') ? 'procesando' : '']];
+  const cajas = [...listaAnexos.children];
+  const vistos = {};
+  for (const caja of cajas) {
+    const { tipo } = caja.dataset;
+    vistos[tipo] = (vistos[tipo] ?? 0) + 1;
+    const varios = cajas.filter(otra => otra.dataset.tipo === tipo).length > 1;
+    const nombre = varios ? `${NOMBRES[tipo]} ${vistos[tipo]}` : NOMBRES[tipo];
+    caja.querySelector('.anexo-titulo span').textContent = caja.fila.querySelector('span').textContent = nombre;
+    caja.querySelector('.quitar').setAttribute('aria-label', `Quitar ${nombre}`);
+    caja.querySelector('.recorte').alt = `${nombre} escaneado`;
+    partes.push([caja.fila, estadoAnexo(anexos.get(caja))]);
   }
-  generarPdf.disabled = ['ine', ...elegidos].some(clave => partes[clave] !== 'listo');
+  for (const [fila, estado] of partes) {
+    const etiqueta = fila.querySelector('.estado');
+    etiqueta.className = `estado ${estado}`;
+    etiqueta.textContent = { listo: 'Listo', procesando: 'Procesando…', error: 'Error', '': 'Falta' }[estado];
+  }
+  generarPdf.disabled = partes.some(([, estado]) => estado !== 'listo');
 }
 
-function elegirAnexo(event) {
-  const boton = event.currentTarget;
-  boton.setAttribute('aria-pressed', boton.getAttribute('aria-pressed') !== 'true');
-  actualizarResumen();
-}
-
-function mostrarAnexo(clave) {
-  const { archivo, foto, escaneo } = anexos[clave];
-  const caja = cajaAnexo(clave);
+function mostrarAnexo(caja) {
+  const { archivo, foto, escaneo, error } = anexos.get(caja);
   const recorte = caja.querySelector('.recorte');
   const pdf = caja.querySelector('.pdf');
-  caja.classList.toggle('cargando', Boolean(foto && !escaneo));
-  caja.querySelector('.vacio').hidden = Boolean(archivo);
+  const falla = caja.querySelector('.falla');
+  caja.classList.toggle('cargando', foto && !escaneo && !error);
   caja.querySelector('.herramientas').hidden = !escaneo;
-  pdf.hidden = !archivo || foto;
-  pdf.querySelector('span').textContent = archivo?.name ?? '';
+  pdf.hidden = Boolean(foto || error);
+  pdf.querySelector('span').textContent = archivo.name;
+  falla.hidden = !error;
+  falla.querySelector('span').textContent = error ? `${archivo.name}: ${error}` : '';
   recorte.hidden = !escaneo;
   if (escaneo) recorte.src = escaneo.toDataURL('image/jpeg', .8);
-  else recorte.removeAttribute('src');
 }
 
-function procesarAnexo(clave, estado) {
+function procesarAnexo(caja, estado) {
   colaIne = colaIne.then(async () => {
-    if (anexos[clave] !== estado) return;
-    let error = '';
+    if (anexos.get(caja) !== estado) return;
     let aviso = '';
     try {
       await prepararIne();
       estado.imagen ??= await abrirImagen(estado.archivo);
       if (!estado.esquinas) {
         estado.esquinas = await detectar(estado.imagen, false) ?? ENTERA;
-        if (estado.esquinas === ENTERA) aviso = 'No encontré bien la orilla de la hoja: revisa el recorte con «Ajustar esquinas»';
+        if (estado.esquinas === ENTERA) aviso = 'no encontré bien la orilla de la hoja: revisa el recorte con «Ajustar esquinas»';
       }
       await pausa();
       const hoja = enderezar(estado.imagen, estado.esquinas, HOJA_ANCHO, HOJA_ALTO);
@@ -454,40 +450,65 @@ function procesarAnexo(clave, estado) {
       estado.plano = escanear(hoja);
       estado.escaneo = girar(estado.plano, estado.cuartos);
     } catch (falla) {
-      error = falla.message;
+      estado.error = falla.message;
     }
-    if (anexos[clave] !== estado) return;
-    if (error) {
-      anexos[clave] = {};
-      cajaAnexo(clave).querySelector('input').value = '';
-      avisarIne(error, true);
-    } else if (aviso) avisarIne(aviso);
-    mostrarAnexo(clave);
+    if (anexos.get(caja) !== estado) return;
+    if (aviso) avisarIne(`${nombreAnexo(caja)}: ${aviso}`);
+    mostrarAnexo(caja);
     actualizarResumen();
   });
 }
 
-// Un PDF se anexa tal cual; una foto se recorta y se deja como escaneo
-async function cambiarAnexo(event) {
-  const clave = event.target.closest('.anexo').dataset.anexo;
-  let archivo = event.target.files[0];
-  let error = '';
-  if (/\.xlsx$/i.test(archivo?.name)) {
-    try {
-      archivo = await excelAPdf(archivo); // queda como cualquier PDF subido
-    } catch {
-      archivo = null;
-      error = 'No se pudo convertir el Excel a PDF';
+// Tarjeta nueva en su lugar: los acuses antes que las cartas, como en el PDF
+function nuevaTarjeta(tipo) {
+  const caja = document.getElementById('plantillaAnexo').content.firstElementChild.cloneNode(true);
+  const ultimoAcuse = [...listaAnexos.querySelectorAll('[data-tipo="acuse"]')].at(-1);
+  caja.dataset.tipo = tipo;
+  if (tipo === 'carta') listaAnexos.append(caja);
+  else if (ultimoAcuse) ultimoAcuse.after(caja);
+  else listaAnexos.prepend(caja);
+
+  // Su renglón en «Contenido del PDF», en la misma posición
+  caja.fila = document.createElement('li');
+  caja.fila.append(document.createElement('span'), Object.assign(document.createElement('span'), { className: 'estado' }));
+  (caja.previousElementSibling?.fila ?? filaIne).after(caja.fila);
+  return caja;
+}
+
+// Cada archivo elegido es un documento más. Un PDF se anexa tal cual; una foto se recorta y se deja como escaneo.
+async function agregarAnexos(event) {
+  const { tipo } = event.target.dataset;
+  const archivos = [...event.target.files];
+  event.target.value = '';
+  avisarIne('');
+  for (let archivo of archivos) {
+    let error = '';
+    if (/\.xlsx$/i.test(archivo.name)) {
+      try {
+        archivo = await excelAPdf(archivo); // queda como cualquier PDF subido
+      } catch {
+        error = 'no se pudo convertir el Excel a PDF';
+      }
     }
+    const foto = !error && !/pdf$/i.test(archivo.type || archivo.name);
+    if (foto && archivo.size > INE_MAX_BYTES) error = 'la imagen pesa más de 15 MB';
+    const caja = nuevaTarjeta(tipo);
+    const estado = { archivo, foto, cuartos: 0, error };
+    anexos.set(caja, estado);
+    mostrarAnexo(caja);
+    if (foto && !error) procesarAnexo(caja, estado);
+    actualizarResumen();
   }
-  const foto = Boolean(archivo) && !/pdf$/i.test(archivo.type || archivo.name);
-  const pesada = foto && archivo.size > INE_MAX_BYTES;
-  const estado = anexos[clave] = archivo && !pesada ? { archivo, foto, cuartos: 0 } : {};
-  avisarIne(error || (pesada ? 'La imagen pesa más de 15 MB' : ''), true);
-  if (!estado.archivo) event.target.value = '';
-  mostrarAnexo(clave);
-  if (foto && !pesada) procesarAnexo(clave, estado);
+}
+
+function quitarAnexo(caja) {
+  const vecina = caja.nextElementSibling ?? caja.previousElementSibling;
+  anexos.delete(caja);
+  caja.fila.remove();
+  caja.remove();
+  avisarIne('');
   actualizarResumen();
+  (vecina?.querySelector('.quitar') ?? document.querySelector('.agregar-anexos input')).focus();
 }
 
 function mostrarLado(lado, estado) {
@@ -664,10 +685,12 @@ async function descargarPdfIne() {
   pdf.addImage(ladosIne.frente.tarjeta, 'JPEG', 208 / 200, 200 / 200, ANCHO / 200, ALTO / 200);
   pdf.addImage(ladosIne.reverso.tarjeta, 'JPEG', 208 / 200, 1150 / 200, ANCHO / 200, ALTO / 200);
   const ine = pdf.output('blob');
-  const elegidos = anexosElegidos();
-  if (!elegidos.length) return descargarArchivo(ine, nombre);
+  const extras = [...listaAnexos.children].map(caja => {
+    const { escaneo, archivo } = anexos.get(caja);
+    return escaneo ? pdfDeHoja(escaneo) : archivo;
+  });
+  if (!extras.length) return descargarArchivo(ine, nombre);
   try {
-    const extras = elegidos.map(clave => anexos[clave].escaneo ? pdfDeHoja(anexos[clave].escaneo) : anexos[clave].archivo);
     descargarArchivo(await juntarPdfs([ine, ...extras]), nombre);
     avisarIne('');
   } catch (error) {
@@ -682,9 +705,9 @@ function limpiarIne() {
     mostrarLado(lado, null);
     marcarCargando(lado, false);
   });
-  anexos = { acuse: {}, carta: {} };
-  Object.keys(anexos).forEach(mostrarAnexo);
-  opcionesAnexo.forEach(boton => boton.setAttribute('aria-pressed', false));
+  anexos.clear();
+  listaAnexos.querySelectorAll('.anexo').forEach(caja => caja.fila.remove());
+  listaAnexos.replaceChildren();
   nombreIne.value = '';
   nombreEditado = false;
   avisarIne('');
@@ -739,13 +762,13 @@ function ajustarLado(event) {
   });
 }
 
-function ajustarAnexo(event) {
-  const clave = event.target.closest('.anexo').dataset.anexo;
-  const { archivo, foto, imagen, esquinas, cuartos } = anexos[clave];
+function ajustarAnexo(caja) {
+  const { archivo, foto, imagen, esquinas, cuartos } = anexos.get(caja);
   abrirEditor(imagen, esquinas, nuevas => {
-    const estado = anexos[clave] = { archivo, foto, imagen, esquinas: nuevas, cuartos };
-    mostrarAnexo(clave);
-    procesarAnexo(clave, estado);
+    const estado = { archivo, foto, imagen, esquinas: nuevas, cuartos };
+    anexos.set(caja, estado);
+    mostrarAnexo(caja);
+    procesarAnexo(caja, estado);
     actualizarResumen();
   });
 }
@@ -756,12 +779,21 @@ function girarLado(event) {
   mostrarLado(lado, ladosIne[lado]);
 }
 
-function girarAnexo(event) {
-  const clave = event.target.closest('.anexo').dataset.anexo;
-  const estado = anexos[clave];
-  estado.cuartos = (estado.cuartos + Number(event.currentTarget.dataset.giro) + 4) % 4;
+function girarAnexo(caja, giro) {
+  const estado = anexos.get(caja);
+  estado.cuartos = (estado.cuartos + giro + 4) % 4;
   estado.escaneo = girar(estado.plano, estado.cuartos);
-  mostrarAnexo(clave);
+  mostrarAnexo(caja);
+}
+
+// Botones de cada tarjeta: quitar, girar y ajustar esquinas
+function usarTarjeta(event) {
+  const boton = event.target.closest('button');
+  const caja = boton?.closest('.anexo');
+  if (!caja) return;
+  if (boton.matches('.quitar')) quitarAnexo(caja);
+  else if (boton.matches('.girar')) girarAnexo(caja, Number(boton.dataset.giro));
+  else ajustarAnexo(caja);
 }
 
 // En PC se puede soltar el archivo sobre el recuadro
@@ -778,10 +810,9 @@ function soltarArchivo(event) {
 document.querySelector('[data-modo="ine"]').addEventListener('click', () => prepararIne().catch(() => {}));
 Object.values(archivosIne).forEach(input => input.addEventListener('change', cambiarImagen));
 document.querySelectorAll('.lado .ajustar').forEach(boton => boton.addEventListener('click', ajustarLado));
-document.querySelectorAll('.anexo .ajustar').forEach(boton => boton.addEventListener('click', ajustarAnexo));
 document.querySelectorAll('.lado .girar').forEach(boton => boton.addEventListener('click', girarLado));
-document.querySelectorAll('.anexo .girar').forEach(boton => boton.addEventListener('click', girarAnexo));
-document.querySelectorAll('.anexo input').forEach(input => input.addEventListener('change', cambiarAnexo));
+document.querySelectorAll('.agregar-anexos input').forEach(input => input.addEventListener('change', agregarAnexos));
+listaAnexos.addEventListener('click', usarTarjeta);
 document.querySelectorAll('#ine .carga').forEach(zona => ['dragover', 'dragleave', 'drop'].forEach(tipo => zona.addEventListener(tipo, soltarArchivo)));
 nombreIne.addEventListener('input', () => nombreEditado = nombreIne.value !== '');
 generarPdf.addEventListener('click', descargarPdfIne);
@@ -790,5 +821,4 @@ lienzo.addEventListener('pointerdown', moverEsquina);
 lienzo.addEventListener('pointermove', moverEsquina);
 document.getElementById('aplicarEsquinas').addEventListener('click', aplicarEsquinas);
 document.getElementById('cancelarEsquinas').addEventListener('click', () => editor.close());
-opcionesAnexo.forEach(boton => boton.addEventListener('click', elegirAnexo));
 actualizarResumen();
