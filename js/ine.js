@@ -397,7 +397,9 @@ function estadoAnexo({ foto, escaneo, error }) {
 // Se numeran solo si hay más de uno del mismo tipo.
 function actualizarResumen() {
   const lados = Object.values(ladosIne).map(estadoLado);
-  const partes = [[filaIne, lados.every(estado => estado === 'listo') ? 'listo' : lados.includes('procesando') ? 'procesando' : '']];
+  // La INE es opcional: sin ningún lado no bloquea, pero si se sube uno falta el otro
+  const estadoIne = lados.includes('procesando') ? 'procesando' : lados.every(estado => estado === 'listo') ? 'listo' : lados.every(estado => !estado) ? '' : 'falta';
+  const partes = [[filaIne, estadoIne]];
   const cajas = [...listaAnexos.children];
   const vistos = {};
   for (const caja of cajas) {
@@ -413,9 +415,10 @@ function actualizarResumen() {
   for (const [fila, estado] of partes) {
     const etiqueta = fila.querySelector('.estado');
     etiqueta.className = `estado ${estado}`;
-    etiqueta.textContent = { listo: 'Listo', procesando: 'Procesando…', error: 'Error', '': 'Falta' }[estado];
+    etiqueta.textContent = { listo: 'Listo', procesando: 'Procesando…', error: 'Error', falta: 'Falta', '': 'Opcional' }[estado];
   }
-  generarPdf.disabled = partes.some(([, estado]) => estado !== 'listo');
+  const estados = partes.map(([, estado]) => estado);
+  generarPdf.disabled = !estados.includes('listo') || estados.some(estado => ['procesando', 'error', 'falta'].includes(estado));
 }
 
 function mostrarAnexo(caja) {
@@ -681,17 +684,20 @@ async function excelAPdf(archivo) {
 
 async function descargarPdfIne() {
   const nombre = `${nombreIne.value.toUpperCase().replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || 'INE'}.pdf`;
-  const pdf = new jspdf.jsPDF({ unit: 'in', format: 'letter' }); // carta a 200 dpi: frente en (208, 200) px y reverso en (208, 1150) px
-  pdf.addImage(ladosIne.frente.tarjeta, 'JPEG', 208 / 200, 200 / 200, ANCHO / 200, ALTO / 200);
-  pdf.addImage(ladosIne.reverso.tarjeta, 'JPEG', 208 / 200, 1150 / 200, ANCHO / 200, ALTO / 200);
-  const ine = pdf.output('blob');
-  const extras = [...listaAnexos.children].map(caja => {
+  const partes = [...listaAnexos.children].map(caja => {
     const { escaneo, archivo } = anexos.get(caja);
     return escaneo ? pdfDeHoja(escaneo) : archivo;
   });
-  if (!extras.length) return descargarArchivo(ine, nombre);
+  if (ladosIne.frente.tarjeta) {
+    const pdf = new jspdf.jsPDF({ unit: 'in', format: 'letter' }); // carta a 200 dpi: frente en (208, 200) px y reverso en (208, 1150) px
+    pdf.addImage(ladosIne.frente.tarjeta, 'JPEG', 208 / 200, 200 / 200, ANCHO / 200, ALTO / 200);
+    pdf.addImage(ladosIne.reverso.tarjeta, 'JPEG', 208 / 200, 1150 / 200, ANCHO / 200, ALTO / 200);
+    const ine = pdf.output('blob');
+    if (!partes.length) return descargarArchivo(ine, nombre);
+    partes.unshift(ine);
+  }
   try {
-    descargarArchivo(await juntarPdfs([ine, ...extras]), nombre);
+    descargarArchivo(await juntarPdfs(partes), nombre);
     avisarIne('');
   } catch (error) {
     avisarIne(error.message, true);
