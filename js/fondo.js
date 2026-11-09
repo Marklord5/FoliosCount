@@ -220,6 +220,7 @@
     if (jugando) {
       texto(`PUNTOS ${puntos}`, 16, 28, 'left');
       texto(`RÉCORD ${Math.max(record, puntos)}`, ancho - 16, 28, 'right');
+      texto('✕ SALIR', ancho / 2, 28, 'center', 4);
       for (let i = 0; i < vidas; i++) sprite('nave', 24 + i * px * 13, alto - 14, .6);
       if (aviso > 0) {
         aviso -= dt;
@@ -240,6 +241,8 @@
   let toques = 0, ultimo = 0;
   addEventListener('pointerdown', e => {
     if (jugando) {
+      // El botón "✕ SALIR" de arriba al centro (en el celular no hay Esc)
+      if (Math.abs(e.clientX - ancho / 2) < 60 && e.clientY < 50) return salir();
       if (finDesde && performance.now() - finDesde > 1000) return salir();
       apuntar(e);
       fuego = true;
